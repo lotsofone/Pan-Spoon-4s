@@ -1,8 +1,11 @@
+
 //basic description of the word
 var base_objects = [];
 base_objects.push({x:0, y:0, width:20, height:20, angle:0, src:"point"}); //center point
-base_objects.push({x:0, y:200, width:40, height:80, angle:180, src:"", tag:"p1body"}); //p1body
-base_objects.push({x:0, y:-200, width:40, height:80, angle:0, src:"", tag:"p2body"}); //p2body
+base_objects.push({x:0, y:200, width:40, height:80, angle:180, src:"", tag:"car"}); //p1body
+base_objects.push({x:0, y:-200, width:40, height:80, angle:0, src:"", tag:"car"}); //p2body
+base_objects.push({x:-100, y:0, width:60, height:60, angle:0, src:"", tag:"box"}); //box
+base_objects.push({x:100, y:0, width:22, height:500, angle:0, src:"", tag:"box"}); //box
 //input track
 var inputs = [[0,0,0,0],[0,0,0,0]];
 {
@@ -179,6 +182,22 @@ function add_object_to_world(object){
     body.addShape(shape);
     world.addBody(body);
     object.body = body;
+    if(object.tag=="box"){
+        var vehicle = new p2.TopDownVehicle(object.body);
+        var wheel;
+        var k = object.height/object.width;
+        var l = (Math.sqrt(k*k+1)/3 + Math.asinh(k)/3/k)/2+(Math.sqrt(1/k/k+1)/3 + k*Math.asinh(1/k)/3)/2;
+        l*=object.width/2;
+        wheel = vehicle.addWheel({
+            localPosition: [l, 0]
+        });
+        wheel.setBrakeForce(10); wheel.setSideFriction(10);
+        wheel = vehicle.addWheel({
+            localPosition: [-l, 0]
+        });
+        wheel.setBrakeForce(10); wheel.setSideFriction(10);
+        vehicle.addToWorld(world);
+    }
 }
 function add_vehicle_to_world(object){
     var sideFriction = 40; var breakForce = 2;
