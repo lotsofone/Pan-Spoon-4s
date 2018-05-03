@@ -1,9 +1,16 @@
-#main_scene{
-
+#scene_div_parent{
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
-div{
-    position: relative;
+#scene_div{
+    position: absolute;
+    width: 0;
+    height: 0;
+    top: 50%;
+    left: 50%;
 }
 
 image{
