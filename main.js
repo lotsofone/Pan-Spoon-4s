@@ -1,4 +1,4 @@
-//globlo
+//globle
 inputs = [[0,0,0,0],[0,0,0,0]];
 var base_objects = [];
 
@@ -8,6 +8,10 @@ base_objects.push({x:0, y:200, width:40, height:80, angle:180, src:"", tag:"car"
 base_objects.push({x:0, y:-200, width:40, height:80, angle:0, src:"", tag:"car"}); //p2body
 base_objects.push({x:-100, y:0, width:60, height:60, angle:0, src:"", tag:"box"}); //box
 base_objects.push({x:100, y:0, width:22, height:500, angle:0, src:"", tag:"box"}); //box
+base_objects.push({x:300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
+base_objects.push({x:-300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
+base_objects.push({x:0, y:300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
+base_objects.push({x:0, y:-300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
 
 base_generator.scene_div = document.getElementById("scene_div");
 base_generator.generateGraphics();

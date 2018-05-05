@@ -1,5 +1,6 @@
 base_generator = {};
 base_generator.scene_div = null;
+base_generator.globle_material = new p2.Material(1);
 
 //input track
 base_generator.inputs = [[0,0,0,0],[0,0,0,0]];
@@ -54,6 +55,8 @@ base_generator.generatePhysics = function(){
     base_generator.world = new p2.World({
         gravity:[0, 0]
     });
+    base_generator.world.addContactMaterial(new p2.ContactMaterial(
+        base_generator.globle_material, base_generator.globle_material, {restitution: 1.0, friction: 0.1}));
     base_generator.world.on("postStep", postStep);
 
     for(var i=0; i<base_objects.length; i++){
@@ -74,17 +77,24 @@ base_generator.generatePhysics = function(){
         vehicle.rf.steerValue = Math.PI/4*(input[2]-input[0]);
         vehicle.lb.engineForce = 60*(input[1]-input[3]);
         vehicle.rb.engineForce = 60*(input[1]-input[3]);
-        vehicle.lb.steerValue = -Math.PI/4*(input[2]-input[0]);
-        vehicle.rb.steerValue = -Math.PI/4*(input[2]-input[0]);
+        //vehicle.lb.steerValue = -Math.PI/4*(input[2]-input[0]);
+        //vehicle.rb.steerValue = -Math.PI/4*(input[2]-input[0]);
     }
     function add_object_to_world(object){
-        var body = new p2.Body({
-            mass: 1,
+        var option = {
             position: [object.x, object.y],
-            angle: object.angle*Math.PI/180
-        });
+            angle: object.angle*Math.PI/180,
+        };
+        if(object.tag!="fixed"){
+            option.mass = 1;
+        }
+        var body = new p2.Body(option);
         var shape = new p2.Box({width: object.width, height: object.height});
+        shape.material = base_generator.globle_material;
         body.addShape(shape);
+        //material
+        
+
         base_generator.world.addBody(body);
         object.body = body;
         if(object.tag=="box"){
