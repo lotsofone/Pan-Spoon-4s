@@ -56,7 +56,7 @@ base_generator.generatePhysics = function(){
         gravity:[0, 0]
     });
     base_generator.world.addContactMaterial(new p2.ContactMaterial(
-        base_generator.globle_material, base_generator.globle_material, {restitution: 1.0, friction: 0.1}));
+        base_generator.globle_material, base_generator.globle_material, {restitution: 1.0, friction: 0.5}));
     base_generator.world.on("postStep", postStep);
 
     for(var i=0; i<base_objects.length; i++){
