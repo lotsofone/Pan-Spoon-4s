@@ -6,11 +6,10 @@ codec.encodeInput = function(input){
 
 codec.decodeInput = function(input, msg){
     var n = parseInt(msg.charAt(1),16);
-    input = [0,0,0,0];
-    if(n>=8){n-=8; input[3]=1;}
-    if(n>=4){n-=4; input[2]=1;}
-    if(n>=2){n-=2; input[1]=1;}
-    if(n>=1){n-=1; input[0]=1;}
+    if(n>=8){n-=8; input[3]=1;}else{input[3]=0;}
+    if(n>=4){n-=4; input[2]=1;}else{input[2]=0;}
+    if(n>=2){n-=2; input[1]=1;}else{input[1]=0;}
+    if(n>=1){n-=1; input[0]=1;}else{input[0]=0;}
 }
 
 codec.encodeMotion = function(base_objects){

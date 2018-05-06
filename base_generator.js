@@ -14,8 +14,8 @@ base_generator.generateGraphics = function(){
     function add_object_to_scene(object){
         var element = document.createElement("div");
         element.style.position = "absolute";
-        element.style.width = object.width;
-        element.style.height = object.height;
+        element.style.width = object.width*base_generator.render_scale;
+        element.style.height = object.height*base_generator.render_scale;
         element.style.top = object.y;
         element.style.left = object.x;
         element.style.transform = "translateY(-50%) translateX(-50%) rotate("+object.angle+"deg)";
@@ -35,8 +35,8 @@ base_generator.render = function(){
         var object = base_objects[i];
         if(object.element){
             var element = object.element;
-            element.style.top = object.y;
-            element.style.left = object.x;
+            element.style.top = object.y*base_generator.render_scale;
+            element.style.left = object.x*base_generator.render_scale;;
             element.style.transform = "translateY(-50%) translateX(-50%) rotate("+object.angle+"rad)";
         }
     }
@@ -155,5 +155,11 @@ base_generator.generatePhysics = function(){
         vehicle.addToWorld(base_generator.world);
         object.vehicle = vehicle;
     }
-
+}
+base_generator.destoryPhysics = function(){
+    for(var i=0; i<base_objects.length; i++){
+        base_objects[i].body = null;
+        base_objects[i].vehicle = null;
+    }
+    base_generator.world = null;
 }
