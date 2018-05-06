@@ -19,8 +19,6 @@ base_objects.push({x:0, y:-300, width:10, height:600, angle:90, src:"", tag:"fix
 
 base_generator.scene_div = document.getElementById("scene_div");
 base_generator.render_scale = 16;
-base_generator.generateGraphics();
-base_generator.generatePhysics();
 
 var timetick = function(deltaTime){
     if(whohost=="youhost") base_generator.fixedUpdate(deltaTime);
@@ -80,20 +78,6 @@ server_socket.onerror = function(){
     console.log("socket error");
 }
 function prepareGame(message){
-    //initialize
-    if(base_generator.scene_div.innerHTML!="")base_generator.destoryGraphics();
-    if(base_generator.world)base_generator.destoryPhysics();
-    base_objects = [];
-    //basic description of the word
-    base_objects.push({x:0, y:0, width:20, height:20, angle:0, src:"point"}); //center point
-    base_objects.push({x:0, y:200, width:40, height:80, angle:180, src:"", tag:"car"}); //p1body
-    base_objects.push({x:0, y:-200, width:40, height:80, angle:0, src:"", tag:"car"}); //p2body
-    base_objects.push({x:-100, y:0, width:60, height:60, angle:0, src:"", tag:"box"}); //box
-    base_objects.push({x:100, y:0, width:22, height:500, angle:0, src:"", tag:"box"}); //box
-    base_objects.push({x:300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
-    base_objects.push({x:-300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
-    base_objects.push({x:0, y:300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
-    base_objects.push({x:0, y:-300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
     //hoster
     whohost = message.whohost;
     //rtc
@@ -108,7 +92,8 @@ function prepareGame(message){
         console.log("got ice candidate: "+JSON.stringify(message.candidate));
     }
     if(whohost == "youhost"){
-        dataChannel = peerConnection.createDataChannel("gm");
+        var dataoption = {ordered: false, reliable: false, maxPacketLifeTime: 1, maxRetransmits: 0};
+        dataChannel = peerConnection.createDataChannel("gm", dataoption);
         peerConnection.createOffer({offerToReceiveAudio: false, offerToReceiveVideo: false, voiceActivityDetection: false})//pc1 create offer
         .then(function(offer){
             peerConnection.setLocalDescription(offer);
