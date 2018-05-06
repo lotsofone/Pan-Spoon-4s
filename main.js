@@ -1,7 +1,7 @@
 //globle
 inputs = [[0,0,0,0],[0,0,0,0]];
 var base_objects = [];
-var server_socket = new WebSocket("ws://50.2.39.53:8080/Dodgem/play");
+var server_socket = new WebSocket("wss://onescoop.info:443/Dodgem/play");
 var peerConnection;
 var dataChannel;
 var whohost = null;
