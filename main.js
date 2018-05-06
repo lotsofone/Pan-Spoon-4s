@@ -4,6 +4,7 @@ var base_objects = [];
 var server_socket = new WebSocket("ws://50.2.39.53:8080/Dodgem/play");
 var peerConnection;
 var dataChannel;
+var whohost = null;
 //basic description of the word
 base_objects.push({x:0, y:0, width:20, height:20, angle:0, src:"point"}); //center point
 base_objects.push({x:0, y:200, width:40, height:80, angle:180, src:"", tag:"car"}); //p1body
@@ -21,10 +22,18 @@ base_generator.render_scale = 16;
 base_generator.generateGraphics();
 base_generator.generatePhysics();
 
-var timetick = function(dt){base_generator.fixedUpdate(dt)};
+var timetick = function(deltaTime){
+    if(whohost=="youhost") base_generator.fixedUpdate(deltaTime);
+    intervalCount += deltaTime;
+    if(intervalCount>=sendInterval){
+        intervalCount-=sendInterval;
+        peerConnectionSendFunc();
+    }
+};
+var peerConnectionSendFunc = function(){};
 setInterval("timetick(10/1000)", 10);
 var intervalCount = 0;
-var sendInterval = 0.04;
+var sendInterval = 0.02;
 
 function render(){
     base_generator.render();
@@ -34,20 +43,33 @@ requestAnimationFrame(render);
 
 server_socket.onmessage = function(e){
     console.log("receive a message from server:"+e.data);
+    var message = e.data;
     if(e.data.charAt(0)!='{'){//this is an quick message
-        if(e.data.charAt(0)==':'){
+        if(e.data.charAt(0)=='>'){
+            message = message.substring(1, message.length);
+        }
+        else if(e.data.charAt(0)==':'){
             codec.decodeMotion(base_objects, e.data);
+            return;
         }
-        else{
+        else if(e.data.charAt(0)==';'){
             codec.decodeInput(inputs[1], e.data);
+            return;
         }
-        return ;
     }
-    var message = JSON.parse(e.data);
+    message = JSON.parse(message);
     if(message.tag == "pairing success"){
         prepareGame(message); return;
     }
+    else if(message.tag == "offer"){
+        offerFunction(message); return;
+    }
+    else if(message.tag == "candidate"){
+        candidateFunction(message); return;
+    }
 }
+var offerFunction;
+var candidateFunction;
 server_socket.onopen = function(){
     console.log("socket open");
 }
@@ -58,6 +80,7 @@ server_socket.onerror = function(){
     console.log("socket error");
 }
 function prepareGame(message){
+    //initialize
     if(base_generator.scene_div.innerHTML!="")base_generator.destoryGraphics();
     if(base_generator.world)base_generator.destoryPhysics();
     base_objects = [];
@@ -71,27 +94,74 @@ function prepareGame(message){
     base_objects.push({x:-300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
     base_objects.push({x:0, y:300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
     base_objects.push({x:0, y:-300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
-
-    base_generator.generateGraphics();
-    if(message.whohost == "youhost"){
-        base_generator.generatePhysics();
-        timetick = function(deltaTime){
-            base_generator.fixedUpdate(deltaTime);
-            intervalCount += deltaTime;
-            if(intervalCount>=sendInterval){
-                intervalCount-=sendInterval;
-                server_socket.send(codec.encodeMotion(base_objects));
+    //hoster
+    whohost = message.whohost;
+    //rtc
+    var ot = {iceServers: [{url: "stun:stun.freeswitch.org"}]};
+    peerConnection = new RTCPeerConnection(ot);
+    peerConnection.onicecandidate = function(e){
+        if(!e.candidate)return ;
+        server_socket.send(">"+JSON.stringify({tag: "candidate", candidate: e.candidate}));//send candidate to the other one
+    }
+    candidateFunction = function(message){
+        peerConnection.addIceCandidate(message.candidate);
+        console.log("got ice candidate: "+JSON.stringify(message.candidate));
+    }
+    if(whohost == "youhost"){
+        dataChannel = peerConnection.createDataChannel("gm");
+        peerConnection.createOffer({offerToReceiveAudio: false, offerToReceiveVideo: false, voiceActivityDetection: false})//pc1 create offer
+        .then(function(offer){
+            peerConnection.setLocalDescription(offer);
+            server_socket.send(">"+JSON.stringify({tag: "offer", offer: offer}));//send offer to pc2
+        });
+        //offer response
+        offerFunction = function(message){
+            peerConnection.setRemoteDescription(message.offer);
+            console.log("local signal tasks down");
+        }
+        //channel
+        dataChannel.onopen = function(){
+            console.log("channel open");
+            peerConnectionSendFunc = function(){
+                dataChannel.send(codec.encodeMotion(base_objects));
+            }
+            dataChannel.onmessage = function(e){
+                codec.decodeInput(inputs[1], e.data);
             }
         }
     }
     else{
-        timetick = function(deltaTime){
-            intervalCount += deltaTime;
-            if(intervalCount>=sendInterval){
-                intervalCount-=sendInterval;
-                server_socket.send(codec.encodeInput(inputs[0]));
+        //offer response
+        offerFunction = function(message){
+            peerConnection.setRemoteDescription(message.offer);
+            peerConnection.createAnswer({offerToReceiveAudio: false, offerToReceiveVideo: false, voiceActivityDetection: false})//pc2 create answer
+            .then(function(offer){
+                peerConnection.setLocalDescription(offer);
+                console.log("local signal tasks down");
+                server_socket.send(">"+JSON.stringify({tag: "offer", offer: offer}));//send offer to pc1
+            });
+        }
+        //channel
+        peerConnection.ondatachannel = function(e){
+            dataChannel = e.channel;
+            dataChannel.onopen = function(){
+                console.log("channel open");
+                peerConnectionSendFunc = function(){
+                    dataChannel.send(codec.encodeInput(inputs[0]));
+                }
+            }
+            dataChannel.onmessage = function(e){
+                codec.decodeMotion(base_objects, e.data);
             }
         }
+    }
+
+    //generate according to whohost
+    base_generator.generateGraphics();
+    if(message.whohost == "youhost"){
+        base_generator.generatePhysics();
+    }
+    else{
     }
 }
 //----------------------------------------------------------------------

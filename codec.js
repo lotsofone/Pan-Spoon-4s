@@ -14,12 +14,12 @@ codec.decodeInput = function(input, msg){
 
 codec.encodeMotion = function(base_objects){
     var msg = "";
-    var PI2 = Math.round(Math.PI*2)*1296;
+    var PI2 = Math.round(Math.PI*2*1296);
     for(var i=0; i<base_objects.length; i++){
         var object = base_objects[i];
         msg+=(":"+Math.round(object.x*1296).toString(36)+
         ":"+Math.round(object.y*1296).toString(36)+
-        ":"+((Math.round(object.angle*1296)%PI2+PI2)%PI2).toString(36));
+        ":"+(Math.round((object.angle%(Math.PI*2)+Math.PI*2)*1296)%PI2).toString(36));
     }
     return msg;
 }
