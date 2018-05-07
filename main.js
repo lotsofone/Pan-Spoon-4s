@@ -81,10 +81,10 @@ function prepareGame(message){
     //hoster
     whohost = message.whohost;
     //rtc
-    var ot = {iceServers: [{urls: ["stun:stun.freeswitch.org"]}, {urls: ["stun:stunserver.org"]}
-    , {urls: ["stun:stun.xten.com"]}, {urls: ["stun:stun.wirlab.net"]}
-    , {urls: ["stun:stun01.sipphone.com"]}, {urls: ["stun:stun.sipgate.net:10000"]}
-    , {urls: ["stun:stun.softjoys.com:3478"]}]};
+    var ot = {iceServers: [{urls: "stun:stunserver.org"}
+    , {urls: "stun:stun.xten.com"}, {urls: "stun:stun.wirlab.net"}
+    , {urls: "stun:stun01.sipphone.com"}, {urls: "stun:stun.sipgate.net:10000"}
+    , {urls: "stun:stun.softjoys.com:3478"}, {urls: "stun:stun.freeswitch.org"}]};
     peerConnection = new RTCPeerConnection(ot);
     peerConnection.onsignalingstatechange = function(e){
         console.log("onsignalingstatechange:"+peerConnection.signalingState);
