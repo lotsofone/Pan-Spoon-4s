@@ -110,6 +110,10 @@ function prepareGame(message){
             peerConnectionSendFunc = function(){
                 dataChannel.send(codec.encodeMotion(base_objects));
             }
+            dataChannel.onerror = function(e){
+                console.log("channel error");
+                console.log(JSON.stringify(e));
+            }
             dataChannel.onmessage = function(e){
                 //console.log("receive from p2p"+e.data);
                 var t = e.data.split(":");
@@ -145,6 +149,10 @@ function prepareGame(message){
                 var ttt = e.data.split(":");
                 console.log("receive from p2p"+ttt[ttt.length-1]+" time="+ new Date().getTime());
                 codec.decodeMotion(base_objects, e.data);
+            }
+            dataChannel.onerror = function(e){
+                console.log("channel error");
+                console.log(JSON.stringify(e));
             }
             dataChannel.onclose = function(){
                 peerConnectionSendFunc = function(){};
