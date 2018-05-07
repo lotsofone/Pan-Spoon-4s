@@ -87,12 +87,13 @@ function prepareGame(message){
     , {urls: "stun:stun.softjoys.com:3478"}]};
     peerConnection = new RTCPeerConnection(ot);
     peerConnection.onicecandidate = function(e){
-        if(!e.candidate)return ;
+        //if(!e.candidate)e.candidate = {candidate: ""} ;
         server_socket.send(">"+JSON.stringify({tag: "candidate", candidate: e.candidate}));//send candidate to the other one
     }
     candidateFunction = function(message){
-        peerConnection.addIceCandidate(message.candidate);
         console.log("got ice candidate: "+JSON.stringify(message.candidate));
+        if(message.candidate==null)return ;
+        peerConnection.addIceCandidate(message.candidate);
     }
     if(whohost == "youhost"){
         var dataoption = {ordered: false, maxRetransmits: 0};//, protocol:"DCT_RTP"
