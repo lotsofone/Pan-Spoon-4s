@@ -40,7 +40,7 @@ function render(){
 requestAnimationFrame(render);
 
 server_socket.onmessage = function(e){
-    console.log("receive a message from server:"+e.data);
+    //console.log("receive a message from server:"+e.data);
     var message = e.data;
     if(e.data.charAt(0)!='{'){//this is an quick message
         if(e.data.charAt(0)=='>'){
@@ -81,19 +81,33 @@ function prepareGame(message){
     //hoster
     whohost = message.whohost;
     //rtc
-    var ot = {iceServers: [{urls: "stun:stun.freeswitch.org"}, {urls: "stun:stunserver.org"}
-    , {urls: "stun:stun.xten.com"}, {urls: "stun:stun.wirlab.net"}
-    , {urls: "stun:stun01.sipphone.com"}, {urls: "stun:stun.sipgate.net:10000"}
-    , {urls: "stun:stun.softjoys.com:3478"}]};
+    var ot = {iceServers: [{urls: ["stun:stun.freeswitch.org"]}, {urls: ["stun:stunserver.org"]}
+    , {urls: ["stun:stun.xten.com"]}, {urls: ["stun:stun.wirlab.net"]}
+    , {urls: ["stun:stun01.sipphone.com"]}, {urls: ["stun:stun.sipgate.net:10000"]}
+    , {urls: ["stun:stun.softjoys.com:3478"]}]};
     peerConnection = new RTCPeerConnection(ot);
+    peerConnection.onsignalingstatechange = function(e){
+        console.log("onsignalingstatechange:"+peerConnection.signalingState);
+    }
+    peerConnection.onconnectionstatechange = function(e){
+        console.log("onconnectionstatechange:"+peerConnection.connectionState);
+    }
+    peerConnection.oniceconnectionstatechange = function(e){
+        console.log("oniceconnectionstatechange:"+peerConnection.iceConnectionState);
+    }
+    peerConnection.onicegatheringstatechange = function(e){
+        console.log("onicegatheringstatechange:"+peerConnection.iceGatheringState)
+    }
     peerConnection.onicecandidate = function(e){
         //if(!e.candidate)e.candidate = {candidate: ""} ;
         server_socket.send(">"+JSON.stringify({tag: "candidate", candidate: e.candidate}));//send candidate to the other one
     }
     candidateFunction = function(message){
-        console.log("got ice candidate: "+JSON.stringify(message.candidate));
+        //console.log("got ice candidate: "+JSON.stringify(message.candidate));
         if(message.candidate==null)return ;
-        peerConnection.addIceCandidate(message.candidate);
+        peerConnection.addIceCandidate(message.candidate).catch(function(reason){
+            console.log("addIceCandidate failed. reason: "+JSON.stringify(reason));
+        });
     }
     if(whohost == "youhost"){
         var dataoption = {ordered: false, maxRetransmits: 0};//, protocol:"DCT_RTP"
@@ -106,7 +120,6 @@ function prepareGame(message){
         //offer response
         offerFunction = function(message){
             peerConnection.setRemoteDescription(message.offer);
-            console.log("local signal tasks down");
         }
         //channel
         dataChannel.onopen = function(){
@@ -136,7 +149,6 @@ function prepareGame(message){
             peerConnection.createAnswer({offerToReceiveAudio: false, offerToReceiveVideo: false, voiceActivityDetection: false})//pc2 create answer
             .then(function(offer){
                 peerConnection.setLocalDescription(offer);
-                console.log("local signal tasks down");
                 server_socket.send(">"+JSON.stringify({tag: "offer", offer: offer}));//send offer to pc1
             });
         }
