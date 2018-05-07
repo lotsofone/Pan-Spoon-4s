@@ -92,7 +92,7 @@ function prepareGame(message){
         console.log("got ice candidate: "+JSON.stringify(message.candidate));
     }
     if(whohost == "youhost"){
-        var dataoption = {ordered: false, reliable: false, maxPacketLifeTime: 1, maxRetransmits: 0};
+        var dataoption = {ordered: false, maxRetransmits: 0};//, protocol:"DCT_RTP"
         dataChannel = peerConnection.createDataChannel("gm", dataoption);
         peerConnection.createOffer({offerToReceiveAudio: false, offerToReceiveVideo: false, voiceActivityDetection: false})//pc1 create offer
         .then(function(offer){
