@@ -81,8 +81,7 @@ function prepareGame(message){
     //hoster
     whohost = message.whohost;
     //rtc
-    var ot = {iceServers: [{urls: "stun:stun.xten.com"}
-    , {urls: "stun:stun01.sipphone.com"}, {urls: "stun:stun.sipgate.net:10000"}
+    var ot = {iceServers: [{urls: "stun:stun.xten.com"}, {urls: "stun:stun.sipgate.net:10000"}
     , {urls: "stun:stun.freeswitch.org"}]};
     peerConnection = new RTCPeerConnection(ot);
     peerConnection.onsignalingstatechange = function(e){
@@ -109,7 +108,7 @@ function prepareGame(message){
         });
     }
     if(whohost == "youhost"){
-        var dataoption = {ordered: false, maxRetransmits: 0};//, protocol:"DCT_RTP"
+        var dataoption = {ordered: false, maxRetransmitTime: 1};//, protocol:"DCT_RTP", maxRetransmits: 0
         dataChannel = peerConnection.createDataChannel("gm", dataoption);
         peerConnection.createOffer({offerToReceiveAudio: false, offerToReceiveVideo: false, voiceActivityDetection: false})//pc1 create offer
         .then(function(offer){
