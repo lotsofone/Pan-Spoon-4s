@@ -81,7 +81,10 @@ function prepareGame(message){
     //hoster
     whohost = message.whohost;
     //rtc
-    var ot = {iceServers: [{url: "stun:stun.freeswitch.org"}]};
+    var ot = {iceServers: [{url: "stun:stun.freeswitch.org"}, {url: "stun:stunserver.org"}
+    , {url: "stun:stun.xten.com"}, {url: "stun:stun.wirlab.net"}
+    , {url: "stun:stun01.sipphone.com"}, {url: "stun:stun.sipgate.net:10000"}
+    , {url: "stun:stun.softjoys.com:3478"}]};
     peerConnection = new RTCPeerConnection(ot);
     peerConnection.onicecandidate = function(e){
         if(!e.candidate)return ;
