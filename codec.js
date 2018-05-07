@@ -12,6 +12,7 @@ codec.decodeInput = function(input, msg){
     if(n>=1){n-=1; input[0]=1;}else{input[0]=0;}
 }
 
+codec.n = 0;
 codec.encodeMotion = function(base_objects){
     var msg = "";
     var PI2 = Math.round(Math.PI*2*1296);
@@ -21,6 +22,7 @@ codec.encodeMotion = function(base_objects){
         ":"+Math.round(object.y*1296).toString(36)+
         ":"+(Math.round((object.angle%(Math.PI*2)+Math.PI*2)*1296)%PI2).toString(36));
     }
+    msg+=":n="+codec.n++;
     return msg;
 }
 

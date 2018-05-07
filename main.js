@@ -111,7 +111,13 @@ function prepareGame(message){
                 dataChannel.send(codec.encodeMotion(base_objects));
             }
             dataChannel.onmessage = function(e){
+                //console.log("receive from p2p"+e.data);
+                var t = e.data.split(":");
+                console.log("receive pack: "+t[t.length-1]);
                 codec.decodeInput(inputs[1], e.data);
+            }
+            dataChannel.onclose = function(){
+                peerConnectionSendFunc = function(){};
             }
         }
     }
@@ -136,7 +142,12 @@ function prepareGame(message){
                 }
             }
             dataChannel.onmessage = function(e){
+                var ttt = e.data.split(":");
+                console.log("receive from p2p"+ttt[ttt.length-1]+" time="+ new Date().getTime());
                 codec.decodeMotion(base_objects, e.data);
+            }
+            dataChannel.onclose = function(){
+                peerConnectionSendFunc = function(){};
             }
         }
     }
