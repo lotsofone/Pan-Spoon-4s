@@ -7,7 +7,7 @@ var whohost = null;
 //
 connection_manager.socketServer = "onescoop.info:443/Dodgem/play";
 connection_manager.iceServers = [{urls: "stun:stun.xten.com"}, {urls: "stun:stun.sipgate.net:10000"},
-    {urls: "stun:stun.freeswitch.org"}, {urls: "turn:118.25.102.41:3478", username:"fourscoop", credential:"team2018"}];
+    {urls: "stun:stun.freeswitch.org"}, {urls: "turn:118.25.102.41:3478", username:"team2", credential:"team2018"}];
 base_generator.scene_div = document.getElementById("scene_div");
 base_generator.render_scale = 16;
 //basic description of the word
