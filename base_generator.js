@@ -1,6 +1,7 @@
 base_generator = {};
 base_generator.scene_div = null;
 base_generator.globle_material = new p2.Material(1);
+base_generator.lastTime = 0;
 
 //input track
 base_generator.inputs = [[0,0,0,0],[0,0,0,0]];
@@ -41,8 +42,7 @@ base_generator.render = function(){
         }
     }
 }
-base_generator.fixedUpdate = function(time){
-    base_generator.world.step(time);
+base_generator.fromWorld = function(world){
     for(var i=0; i<base_objects.length; i++){
         var object = base_objects[i];
         object.x = object.body.position[0];
@@ -71,19 +71,19 @@ base_generator.generatePhysics = function(){
     }
     function vehicle_fu(object, input){
         var vehicle = object.vehicle;
-        vehicle.lf.engineForce = 60*(input[1]-input[3]);
-        vehicle.rf.engineForce = 60*(input[1]-input[3]);
+        vehicle.lf.engineForce = 30*(input[1]-input[3]);
+        vehicle.rf.engineForce = 30*(input[1]-input[3]);
         vehicle.lf.steerValue = Math.PI/4*(input[2]-input[0]);
         vehicle.rf.steerValue = Math.PI/4*(input[2]-input[0]);
-        vehicle.lb.engineForce = 60*(input[1]-input[3]);
-        vehicle.rb.engineForce = 60*(input[1]-input[3]);
+        vehicle.lb.engineForce = 30*(input[1]-input[3]);
+        vehicle.rb.engineForce = 30*(input[1]-input[3]);
         //vehicle.lb.steerValue = -Math.PI/4*(input[2]-input[0]);
         //vehicle.rb.steerValue = -Math.PI/4*(input[2]-input[0]);
     }
     function add_object_to_world(object){
         var option = {
             position: [object.x, object.y],
-            angle: object.angle*Math.PI/180,
+            angle: object.angle,
         };
         if(object.tag!="fixed"){
             option.mass = 1;
@@ -98,7 +98,7 @@ base_generator.generatePhysics = function(){
         base_generator.world.addBody(body);
         object.body = body;
         if(object.tag=="box"){
-            var f = 200;
+            var f = 100;
             f/=4;
             var vehicle = new p2.TopDownVehicle(object.body);
             var wheel;
@@ -130,7 +130,7 @@ base_generator.generatePhysics = function(){
         }
     }
     function add_vehicle_to_world(object){
-        var sideFriction = 40; var breakForce = 2;
+        var sideFriction = 20; var breakForce = 1;
         var vehicle = new p2.TopDownVehicle(object.body);
         vehicle.lf = vehicle.addWheel({
             localPosition: [-object.width/2, object.height/2*1]
@@ -155,6 +155,7 @@ base_generator.generatePhysics = function(){
         vehicle.addToWorld(base_generator.world);
         object.vehicle = vehicle;
     }
+    return base_generator.world;
 }
 base_generator.destoryPhysics = function(){
     for(var i=0; i<base_objects.length; i++){
@@ -162,4 +163,22 @@ base_generator.destoryPhysics = function(){
         base_objects[i].vehicle = null;
     }
     base_generator.world = null;
+}
+base_generator.level = function(i){
+    if(i==0){
+        let base_objects = [];
+        base_objects.push({x:0, y:0, width:20, height:20, angle:0, src:"point"}); //center point
+        base_objects.push({x:0, y:200, width:40, height:80, angle:180, src:"", tag:"car"}); //p1body
+        base_objects.push({x:0, y:-200, width:40, height:80, angle:0, src:"", tag:"car"}); //p2body
+        base_objects.push({x:-100, y:0, width:60, height:60, angle:0, src:"", tag:"box"}); //box
+        base_objects.push({x:100, y:0, width:22, height:500, angle:0, src:"", tag:"box"}); //box
+        base_objects.push({x:300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
+        base_objects.push({x:-300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
+        base_objects.push({x:0, y:300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
+        base_objects.push({x:0, y:-300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
+        for(let i=0; i<base_objects.length; i++){
+            base_objects[i].angle *= Math.PI/180;
+        }
+        return base_objects;
+    }
 }

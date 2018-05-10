@@ -41,7 +41,7 @@ connection_manager.setDistributionFunction = function(tag, func){
 connection_manager.startPeerConnection = function(starter){
     var option = {iceServers: this.iceServers};
     this.peerConnection = new RTCPeerConnection(option);
-    var dataoption = {ordered: false, maxRetransmitTime: 1, negotiated: true, id: 1};
+    var dataoption = {ordered: true, negotiated: true, id: 1};
     this.dataChannel = this.peerConnection.createDataChannel("gm", dataoption);
     if(starter){//to be the one to createOffer
         this.peerConnection.createOffer({offerToReceiveAudio: false, offerToReceiveVideo: false, voiceActivityDetection: false})

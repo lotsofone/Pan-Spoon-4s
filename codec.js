@@ -13,24 +13,35 @@ codec.decodeInput = function(input, msg){
 }
 
 codec.n = 0;
-codec.encodeMotion = function(base_objects){
+codec.encodeMotion = function(base_objects, tickStamp){
     var msg = "";
-    var PI2 = Math.round(Math.PI*2*1296);
     for(var i=0; i<base_objects.length; i++){
         var object = base_objects[i];
+        if(object.tag == "fixed")continue;
         msg+=(":"+Math.round(object.x*1296).toString(36)+
         ":"+Math.round(object.y*1296).toString(36)+
-        ":"+(Math.round((object.angle%(Math.PI*2)+Math.PI*2)*1296)%PI2).toString(36));
+        ":"+Math.round(object.angle*1296).toString(36));
     }
-    msg+=":n="+codec.n++;
+    msg+="&"+tickStamp.toString(36);//tick stamp
     return msg;
 }
 
-codec.decodeMotion = function(base_objects, msg){
-    var lsts = msg.split(':');
-    for(var i=0; i<base_objects.length; i++){
-        base_objects[i].x = parseInt(lsts[i*3+1],36)/1296;
-        base_objects[i].y = parseInt(lsts[i*3+2],36)/1296;
-        base_objects[i].angle = parseInt(lsts[i*3+3],36)/1296;
+codec.decodeMotion = function(msg){
+    let lsts = msg.split(/[:&]/);
+    let bi; let mi=1;
+    let positions = [];
+    for(bi=0; bi<base_objects.length; bi++){
+        if(base_objects[bi].tag=="fixed"){//fixed objects don't need physics update
+            positions.push({});
+        }
+        else{
+            let position = {};
+            position.x = parseInt(lsts[mi++],36)/1296;
+            position.y = parseInt(lsts[mi++],36)/1296;
+            position.angle = parseInt(lsts[mi++],36)/1296;
+            positions.push(position);
+        }
     }
+    positions.tickStamp = parseInt(lsts[mi++] ,36);
+    return positions;
 }

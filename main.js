@@ -1,33 +1,34 @@
 //globle
-inputs = [[0,0,0,0],[0,0,0,0]];
+var inputs = [[0,0,0,0],[0,0,0,0]];
 var base_objects = [];
 var peerConnection;
 var dataChannel;
 var whohost = null;
+var world = null;
 //
 connection_manager.socketServer = "onescoop.info:443/Dodgem/play";
 connection_manager.iceServers = [{urls: "stun:stun.xten.com"}, {urls: "stun:stun.sipgate.net:10000"},
     {urls: "stun:stun.freeswitch.org"}, {urls: "turn:118.25.102.41:3478", username:"team2", credential:"team2018"}];
 base_generator.scene_div = document.getElementById("scene_div");
 base_generator.render_scale = 16;
-//basic description of the word
-base_objects.push({x:0, y:0, width:20, height:20, angle:0, src:"point"}); //center point
-base_objects.push({x:0, y:200, width:40, height:80, angle:180, src:"", tag:"car"}); //p1body
-base_objects.push({x:0, y:-200, width:40, height:80, angle:0, src:"", tag:"car"}); //p2body
-base_objects.push({x:-100, y:0, width:60, height:60, angle:0, src:"", tag:"box"}); //box
-base_objects.push({x:100, y:0, width:22, height:500, angle:0, src:"", tag:"box"}); //box
-base_objects.push({x:300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
-base_objects.push({x:-300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
-base_objects.push({x:0, y:300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
-base_objects.push({x:0, y:-300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
-
+//init
 connection_manager.startSocket();
 connection_manager.setDistributionFunction("pairing success", function(message){
+    console.log(message.whohost);
     prepareGame(message);
 })
 
+var tickStamp = 0;
 var timetick = function(deltaTime){
-    if(whohost=="youhost") base_generator.fixedUpdate(deltaTime);
+    if(whohost=="youhost"&&world){
+        base_generator.world.step(deltaTime/1000);
+        base_generator.fromWorld(base_generator.world);
+        let p = shadowSys.takePositions(base_objects, tickStamp);
+        shadowSys.addPack(p);
+        //console.log(world.time);
+        //console.log(JSON.stringify(p));
+        tickStamp+=deltaTime;
+    }
     intervalCount += deltaTime;
     if(intervalCount>=sendInterval){
         intervalCount-=sendInterval;
@@ -35,12 +36,36 @@ var timetick = function(deltaTime){
     }
 };
 var peerConnectionSendFunc = function(){};
-setInterval("timetick(10/1000)", 10);
+var tickInterval = 10;
+setInterval("timetick("+tickInterval+")", tickInterval);
 var intervalCount = 0;
-var sendInterval = 0.02;
+var sendInterval = 20;
 
-function render(){
-    base_generator.render();
+var lastTime;
+function render(time){
+    if(whohost){
+        //console.log(JSON.stringify(shadowSys.shadowQueue));
+        var deltaTime = lastTime ? (time - lastTime) : 0;
+        lastTime = time;
+        var cachedTime = shadowSys.getQueueTime();
+        if(cachedTime-deltaTime > 250){
+            deltaTime = cachedTime - 250;
+        }
+        else if(cachedTime > 200){
+            deltaTime*=1.1;
+        }
+        else if(cachedTime > 140){
+            
+        }
+        else{
+            deltaTime*=0.9;
+        }
+        shadowSys.step(deltaTime);
+        let positions = shadowSys.computeCurrentPositions();
+        shadowSys.applyPositions(base_objects, positions);
+
+        base_generator.render();
+    }
     requestAnimationFrame(render);
 }
 requestAnimationFrame(render);
@@ -58,6 +83,10 @@ server_socket.onerror = function(){
     console.log("socket error");
 }
 function prepareGame(message){
+    base_objects = base_generator.level(0);
+    tickStamp = 0;
+    shadowSys.reset();
+    shadowSys.init(base_objects);
     //hoster
     whohost = message.whohost;
     var starter = false;
@@ -76,13 +105,13 @@ function prepareGame(message){
         connection_manager.dataChannel.onopen = function(){
             console.log("channel open");
             peerConnectionSendFunc = function(){
-                connection_manager.dataChannel.send(codec.encodeMotion(base_objects));
+                connection_manager.dataChannel.send(codec.encodeMotion(base_objects, tickStamp));
             }
         }
         connection_manager.dataChannel.onmessage = function(e){
             //console.log("receive from p2p"+e.data);
             var t = e.data.split(":");
-            console.log("receive pack: "+t[t.length-1]);
+            //console.log("receive pack: "+t[t.length-1]);
             codec.decodeInput(inputs[1], e.data);
         }
     }
@@ -96,15 +125,15 @@ function prepareGame(message){
         }
         connection_manager.dataChannel.onmessage = function(e){
             var ttt = e.data.split(":");
-            console.log("receive from p2p"+ttt[ttt.length-1]+" time="+ new Date().getTime());
-            codec.decodeMotion(base_objects, e.data);
+            //console.log("receive from p2p"+ttt[ttt.length-1]+" time="+ new Date().getTime());
+            shadowSys.addPack(codec.decodeMotion(e.data));
         }
     }
 
     //generate according to whohost
     base_generator.generateGraphics();
     if(message.whohost == "youhost"){
-        base_generator.generatePhysics();
+        world = base_generator.generatePhysics();
     }
 }
 
@@ -144,6 +173,7 @@ function prepareGame(message){
         }
     })
 }
+
 /*
 //-----------------------------------------------
 function checkTURNServer(turnConfig, timeout){ 
