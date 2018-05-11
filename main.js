@@ -8,7 +8,11 @@ var world = null;
 //
 connection_manager.socketServer = "onescoop.info:443/Dodgem/play";
 connection_manager.iceServers = [{urls: "stun:stun.xten.com"}, {urls: "stun:stun.sipgate.net:10000"},
-    {urls: "stun:stun.freeswitch.org"}, {urls: "turn:118.25.102.41:3478", username:"team2", credential:"team2018"}];
+    {urls: "stun:stun.freeswitch.org"},
+    {urls: "turn:118.25.102.41:3478?transport=tcp", username:"team2", credential:"team2018"},
+    {urls: "turn:118.25.102.41:3478?transport=udp", username:"team2", credential:"team2018"},
+    {urls: "turn:118.25.102.41:5349?transport=tcp", username:"team2", credential:"team2018"},
+    {urls: "turn:118.25.102.41:5349?transport=udp", username:"team2", credential:"team2018"}];
 base_generator.scene_div = document.getElementById("scene_div");
 base_generator.render_scale = 16;
 //init
@@ -174,8 +178,8 @@ function prepareGame(message){
     })
 }
 
-/*
-//-----------------------------------------------
+
+//turn server test-----------------------------------------------
 function checkTURNServer(turnConfig, timeout){ 
 
     return new Promise(function(resolve, reject){
@@ -205,12 +209,45 @@ function checkTURNServer(turnConfig, timeout){
       };
     });   
   }
-
-  checkTURNServer({
-      urls: 'turn:118.25.102.41:3478',
-      username: 'team2',
-      credential: 'team2018'
-  }).then(function(bool){
-      console.log('is my TURN server active? ', bool? 'yes':'no');
-  }).catch(console.error.bind(console));
-*/
+function m1(){
+    checkTURNServer({
+        urls: ['turn:118.25.102.41:3478?transport=tcp', 'turn:118.25.102.41:3478?transport=udp',
+        'turn:118.25.102.41:5349?transport=tcp', 'turn:118.25.102.41:5349?transport=udp'],
+        username: 'team2',
+        credential: 'team2018'
+    }).then(function(bool){
+        console.log('is my TURN server active? ', bool? 'yes':'no');
+    }).catch(console.error.bind(console));
+}
+function m2(){
+    checkTURNServer({
+        urls: 'turn:118.25.102.41:3478?transport=tcp',
+        username: 'team2',
+        credential: 'team2018'
+    }).then(function(bool){
+        console.log('is my TURN server active? 3478tcp', bool? 'yes':'no');
+    }).catch(console.error.bind(console));
+    checkTURNServer({
+        urls: 'turn:118.25.102.41:3478?transport=udp',
+        username: 'team2',
+        credential: 'team2018'
+    }).then(function(bool){
+        console.log('is my TURN server active? 3478udp', bool? 'yes':'no');
+    }).catch(console.error.bind(console));
+    checkTURNServer({
+        urls: 'turn:118.25.102.41:5349?transport=tcp',
+        username: 'team2',
+        credential: 'team2018'
+    }).then(function(bool){
+        console.log('is my TURN server active? 5349tcp', bool? 'yes':'no');
+    }).catch(console.error.bind(console));
+    checkTURNServer({
+        urls: 'turn:118.25.102.41:5349?transport=udp',
+        username: 'team2',
+        credential: 'team2018'
+    }).then(function(bool){
+        console.log('is my TURN server active? 5349udp', bool? 'yes':'no');
+    }).catch(console.error.bind(console));
+}
+//m1();
+//m2();
