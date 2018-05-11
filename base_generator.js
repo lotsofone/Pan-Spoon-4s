@@ -7,7 +7,7 @@ base_generator.lastTime = 0;
 base_generator.inputs = [[0,0,0,0],[0,0,0,0]];
 
 
-base_generator.generateGraphics = function(){
+base_generator.generateGraphics = function(base_objects){
     for(var i=0; i<base_objects.length; i++){
         add_object_to_scene(base_objects[i]);
     }
@@ -31,7 +31,7 @@ base_generator.destoryGraphics = function(){
     }
     base_generator.scene_div.innerHTML = "";
 }
-base_generator.render = function(){
+base_generator.render = function(base_objects){
     for(var i=0; i<base_objects.length; i++){
         var object = base_objects[i];
         if(object.element){
@@ -42,7 +42,7 @@ base_generator.render = function(){
         }
     }
 }
-base_generator.fromWorld = function(world){
+base_generator.fromWorld = function(base_objects, world){
     for(var i=0; i<base_objects.length; i++){
         var object = base_objects[i];
         object.x = object.body.position[0];
@@ -50,7 +50,7 @@ base_generator.fromWorld = function(world){
         object.angle = object.body.angle;
     }
 }
-base_generator.generatePhysics = function(){
+base_generator.generatePhysics = function(base_objects){
     // Create a physics world, where bodies and constraints live
     base_generator.world = new p2.World({
         gravity:[0, 0]
@@ -66,8 +66,8 @@ base_generator.generatePhysics = function(){
     add_vehicle_to_world(base_objects[2]);
 
     function postStep(){
-        vehicle_fu(base_objects[1], inputs[0]);
-        vehicle_fu(base_objects[2], inputs[1]);
+        vehicle_fu(base_objects[1], game.inputs[0]);
+        vehicle_fu(base_objects[2], game.inputs[1]);
     }
     function vehicle_fu(object, input){
         var vehicle = object.vehicle;

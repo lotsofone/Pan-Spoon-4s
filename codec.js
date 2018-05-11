@@ -26,7 +26,7 @@ codec.encodeMotion = function(base_objects, tickStamp){
     return msg;
 }
 
-codec.decodeMotion = function(msg){
+codec.decodeMotion = function(base_objects, msg){
     let lsts = msg.split(/[:&]/);
     let bi; let mi=1;
     let positions = [];

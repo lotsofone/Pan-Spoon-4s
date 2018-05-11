@@ -14,6 +14,7 @@
     transform: scale(0.0625);
 }
 
-image{
-    position: fixed;
+img{
+    position: absolute;
+    transform: scale(0.5) rotate(2.2rad);
 }
