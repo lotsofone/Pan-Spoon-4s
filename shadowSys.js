@@ -85,6 +85,7 @@ shadowSys.takePositions = function(base_objects, tickStamp){
         }
         positions.push(p);
     }
+    positions.tag = "positions";
     return positions;
 }
 shadowSys.getQueueTime = function(){

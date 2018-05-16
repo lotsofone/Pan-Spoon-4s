@@ -43,5 +43,6 @@ codec.decodeMotion = function(base_objects, msg){
         }
     }
     positions.tickStamp = parseInt(lsts[mi++] ,36);
+    positions.tag = "positions";
     return positions;
 }

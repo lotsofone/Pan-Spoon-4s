@@ -1,23 +1,215 @@
-<html>
-<head>
-    <title>Pan4s</title>
-    <link rel="stylesheet" type="text/css" href="css/index.css" charset="utf-8"/>
-    <meta charset="utf-8">
-</head>
-<body>
-    <!--canvas id="main_scene" width="1280" height="720"></canvas-->
-    <div id="scene_div_parent">
-        <div id="scene_div">
+
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="css/index.css" charset="utf-8"/>
+ </head>
+ <style type="text/css"> 
+ #titles{ 
+   font-weight:bold; 
+   font-size:18px; 
+   height:50px; 
+   line-height:50px; 
+   background:#FFF9F3; 
+   text-align:center;  
+   border:1px solid #CCC;; 
+   }
+ #contents{ 
+    margin-top:20px; 
+    background:#FFF9F3; 
+    border:1px solid #CCC;; 
+    }
+  #form-itemGroup{ 
+   padding:10px;  
+    }
+  #form-itemGroup label{ 
+    display:inline-block; 
+    width:100px; 
+    height:32px; 
+    line-height:32px; 
+    color:#666; 
+    text-align:right; 
+    }
+  #form-itemGroup .userName{ 
+    width:200px; 
+    height:40px; 
+    line-height:40px; 
+    border:1px solid #CCC; 
+    }  
+  #form-itemGroup .default{ 
+    width:200px; 
+    height:32px; 
+    line-height:32px; 
+    color:#999; 
+    } 
+  #form-itemGroup .error{ 
+    height:32px; 
+    line-height:32px; 
+    color:#F00; 
+    }
+  #form-itemGroup .success{ 
+    height:32px; 
+    line-height:32px; 
+    color:#096; 
+    }  
+  .divBtn{ 
+    margin-top:20px; 
+    margin-left:200px; 
+    width:100px; 
+    height:32px; 
+    line-height:32px; 
+    background-color:#F93; 
+    margin-bottom:10px; 
+    color:#ffffff; 
+    font-weight:bold; 
+    border:none; 
+    } 
+</style>
+
+ <body>
+  <div id="header">
+	<div id="headleft" style="background-color:#CCFFCC;width:90%;float:left;height:60px;">
+	<b><br>碰碰车小游戏</b></div>
+	<div id="headright" style="background-color:#CCFFCC;width:10%;float:right;height:60px;">
+	 <div> 
+		  <a href="javascript:openadmin();">登录</a>
+          <a href="javascript:opensignup();">注册</a>
+	</div>
+</div>
+
+<div id="gamesurface" style="background-color:#99CCCC;width:80%;height:650px;float:left;">
+	<div id="gamechat" style="background-color:#edf;width:30%;height:650px;float:left;">
+	聊天在这里
+	</div>
+	<div id="gameplay" style="background-color:#99CCCC;width:70%;height:650px;float:right;">
+        <div id="scene_div_parent">
+            <a id = "damage1"></a>
+            <a id = "ballhp"></a>
+            <a id = "damage2"></a>
+            <div id="scene_div"></div>
         </div>
+	    <button id="sign" class="divBtn" onclick="startMatch()">开始游戏</button>
+	</div>
+</div>
+
+<div id=win1 style="display:none; POSITION:absolute; left:50%; top:50%; width:600px; height:400px; margin-left:-300px; margin-top:-200px; border:1px solid #888; background-color:#edf;">
+	<div id="form-itemGroup">
+    <h3><p style="text-align:center">登录</p></h3>
+    <label for="Name">用户名：</label>
+    <input type="text" id="Name" class="userName" onBlur="checkName()" oninput="checkName()" >
+    <span class="default" id="nerr"></span> 
+	</div>
+	 <div id="form-itemGroup"> 
+      <label for="Pasword">密码</label> 
+      <input type="password" id="Password" class="userName" onBlur="checkPwd()" oninput="checkPwd()"> 
+      <span class="default" id="perr"></span> 
+    </div> 
+    <div>
+		<button id="log" class="divBtn" onclick="loginForm()">登录</button>
+		<button id="close" class="divBtn" onclick="closeadmin()">关闭</button>
     </div>
-    
-    <script src="adapter.js" charset="utf-8"></script>
-    <script src="p2.js/p2.js" charset="utf-8"></script>
-    <script src="connection_manager.js" charset="utf-8"></script>
-    <script src="codec.js" charset="utf-8"></script>
-    <script src="shadowSys.js" charset="utf-8"></script>
-    <script src="base_generator.js" charset="utf-8"></script>
-    <script src="game.js" charset="utf-8"></script>
-    <script src="main.js" charset="utf-8"></script>
-</body>
+</div>
+
+<div id=win2 style="display:none; POSITION:absolute; left:50%; top:50%; width:600px; height:400px; margin-left:-300px; margin-top:-200px; border:1px solid #888; background-color:#edf;"> 
+    <div  id="form-itemGroup"> 
+    <h3><p style="text-align:center">注册</p></h3>
+      <label for="userName">用户名：</label> 
+      <input type="text" id="userName" class="userName" onBlur="checkUserName()" oninput="checkUserName()"> 
+      <span class="default" id="nameErr">请输入少于10位的用户名</span> 
+    </div> 
+    <div id="form-itemGroup"> 
+      <label for="userPasword">密码：</label> 
+      <input type="password" id="userPassword" class="userName" onBlur="checkPassword()" oninput="checkPassword()"> 
+      <span class="default" id="passwordErr">请输入少于10位的密码</span> 
+    </div> 
+    <div id="form-itemGroup"> 
+      <label for="userConfirmPasword">ȷ确认密码</label> 
+      <input type="password" id="userConfirmPassword" class="userName" onBlur="ConfirmPassword()" oninput="ConfirmPassword()"> 
+      <span class="default" id="conPasswordErr">请再输入一遍密码</span> 
+     </div>
+    <div> 
+    	<button id="sign" class="divBtn" onclick="checkForm()">注册</button>
+    	<button id="close" class="divBtn" onclick="closesign()">关闭</button>
+    </div> 
+</div>
+
+<div id=win3 style="display:none; POSITION:absolute; left:50%; top:50%; width:300px; height:200px; margin-left:-300px; margin-top:-200px; border:1px solid #888; background-color:#edf;">
+   <div>
+       <p id="logmsg" style="text-align:center")><font color="000"></font></p>
+   </div>
+	<div>
+		<button id="close" class="divBtn" onclick="closelogres()">关闭</button>	
+	</div>
+</div>
+
+
+
+<div id="rankboard" style="background-color:#FFFFCC;width:20%;height:400px;float:right;background-color:#edf;">
+	<div align="center"><button id="rank" class="divBtn" onclick="ViewRank()">查看排行</button></div>
+
+
+<ul class="list-group">
+   
+	   <li class="list-group-item">
+		  
+			排名<span class="badge" style="color:green;background:red;">1</span><br>
+			用户名: <span id="name1"></span><br> 
+			赢场次: <span id="111"></span><br>
+			输场次：<span id="lose1"></span><br>
+			<br>
+	   </li>
+	   <li class="list-group-item"> 
+			排名<span class="badge" style="color:green;background:orange;">2</span><br>
+			用户名: <span id="name2"></span><br> 
+			赢场次: <span id="222"></span><br> 
+			输场次：<span id="lose2"></span><br>
+			<br>
+		</li>
+	   <li class="list-group-item">		  
+		    排名<span class="badge" style="color:red;background:orange;">3</span><br>
+		  	用户名: <span id="name3"></span><br> 
+			赢场次: <span id="333"></span><br> 
+			输场次：<span id="lose3"></span><br>
+			<br>
+	   </li>
+</ul>
+
+</div>
+
+<div id="record" style="background-color:#CCCCFF;width:20%;height:250px;float:right;align:center";>
+	<div align="center"><button id="rank" class="divBtn" onclick="viewRecord()">战绩</button></div>
+
+	<ul class="list-group">
+   
+	   <li class="list-group-item">
+			对战日期: <span id="date1"></span><br> 
+			对战人员: <span id="pe1"></span><br>
+			赢家：<span id="res1"></span><br>
+			<br>
+	   </li>
+	   <li class="list-group-item"> 
+			对战日期: <span id="date2"></span><br> 
+			对战人员: <span id="pe2"></span><br>
+			赢家：<span id="res2"></span><br>
+			<br>
+		</li>
+	</ul>
+</div>
+
+
+<div id="footer" style="background-color:#FFFFCC;clear:both;text-align:center;">
+	版权@潘四勺小队
+</div>
+
+<script src="adapter.js" charset="utf-8"></script>
+<script src="p2.js/p2.js" charset="utf-8"></script>
+<script src="connection_manager.js" charset="utf-8"></script>
+<script src="codec.js" charset="utf-8"></script>
+<script src="shadowSys.js" charset="utf-8"></script>
+<script src="base_generator.js" charset="utf-8"></script>
+<script src="game.js" charset="utf-8"></script>
+<script src="user.js" charset="UTF-8"></script>
+<script src="main.js" charset="utf-8"></script>
+ </body>
 </html>

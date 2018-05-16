@@ -39,6 +39,10 @@ connection_manager.setDistributionFunction = function(tag, func){
     }
 }
 connection_manager.startPeerConnection = function(starter){
+    if(connection_manager.peerConnection){
+        console.log("Warning! Starting a peerconnection without closing the last one");
+        connection_manager.closePeerConnection();
+    }
     var option = {iceServers: this.iceServers};
     this.peerConnection = new RTCPeerConnection(option);
     var dataoption = {ordered: true, negotiated: true, id: 1};
@@ -83,4 +87,6 @@ connection_manager.startPeerConnection = function(starter){
 connection_manager.closePeerConnection = function(){
     this.dataChannel.close();
     this.peerConnection.close();
+    this.dataChannel = null;
+    this.peerConnection = null;
 }

@@ -13,8 +13,15 @@
     left: 50%;
     transform: scale(0.0625);
 }
-
-img{
-    position: absolute;
-    transform: scale(0.5) rotate(2.2rad);
+#damage1{
+    float: left;
+    color: #FF6666;
+}
+#ballhp{
+    float: top;
+    color: #996600;
+}
+#damage2{
+    float: right;
+    color: #3399FF;
 }
