@@ -50,15 +50,18 @@ base_generator.render = function(base_objects){
             element.style.transform = "translateY(-50%) translateX(-50%) rotate("+object.angle+"rad)";
         }
     }
+    base_generator.damageSuma1.innerHTML = base_objects[1].damageSum;
+    base_generator.damageSuma2.innerHTML = base_objects[2].damageSum;
+    base_generator.ballhpa.innerHTML = base_objects[0].hp;
 }
-base_generator.fromWorld = function(base_objects, world){
+/*base_generator.fromWorld = function(base_objects, world){
     for(var i=0; i<base_objects.length; i++){
         var object = base_objects[i];
         object.x = object.body.position[0];
         object.y = object.body.position[1];
         object.angle = object.body.angle;
     }
-}
+}*/
 base_generator.generatePhysics = function(base_objects){
     // Create a physics world, where bodies and constraints live
     base_generator.world = new p2.World({
@@ -72,6 +75,8 @@ base_generator.generatePhysics = function(base_objects){
     }
     add_vehicle_to_world(base_objects[1]);
     add_vehicle_to_world(base_objects[2]);
+
+
 
     function add_object_to_world(object){
         var option = {
@@ -101,14 +106,17 @@ base_generator.generatePhysics = function(base_objects){
             shape = new p2.Box({width: object.width, height: object.height});
             body.addShape(shape);
         }
+        //material
         for(let i=0; i<body.shapes.length; i++){
             body.shapes[i].material = base_generator.globle_material;
         }
-        //material
-        
-
+        //hp
+        if(object.hp!=null){
+            body.hp = object.hp;
+        }
         base_generator.world.addBody(body);
         object.body = body;
+        //body vehicle
         if(object.tag=="box"){
             var f = 100;
             f/=4;
@@ -182,6 +190,7 @@ base_generator.generatePhysics = function(base_objects){
 
         vehicle.addToWorld(base_generator.world);
         object.vehicle = vehicle;
+        object.body.damageSum=0;
     }
     return base_generator.world;
 }
@@ -213,10 +222,10 @@ base_generator.carObject = function(tag){
         shape.vertices.push([-shape.vertices[l-i][0],shape.vertices[l-i][1]]);
     }
     if(tag=="car1"){
-        return{x:0, y:200, angle:180, width:49.5, height:99.5, src:"car1.png", tag:"car1", shape:shape};
+        return{x:0, y:200, angle:180, width:49.5, height:99.5, src:"car1.png", tag:"car1", shape:shape, damageSum:0};
     }
     else{
-        return{x:0, y:-200, angle:0, width:49.5, height:99.5, src:"car2.png", tag:"car2", shape:shape};
+        return{x:0, y:-200, angle:0, width:49.5, height:99.5, src:"car2.png", tag:"car2", shape:shape, damageSum:0};
     }
 }
 base_generator.level = function(i){

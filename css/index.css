@@ -18,7 +18,9 @@
     color: #FF6666;
 }
 #ballhp{
-    float: top;
+    position: absolute;
+    margin-left: 50%;
+    transform: TranslateX(-50%);
     color: #996600;
 }
 #damage2{

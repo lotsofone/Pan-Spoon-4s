@@ -1,37 +1,62 @@
 var codec = {};
-codec.encodeInput = function(input){
+codec.encodeInput = function(input, tickStamp){
     var n = input[3]*8+input[2]*4+input[1]*2+input[0];
-    return ";"+n.toString(16);
+    return ";"+n.toString(16)+";"+tickStamp.toString(36);
 }
 
-codec.decodeInput = function(input, msg){
+codec.decodeInput = function(msg){
+    let input = [0,0,0,0];
     var n = parseInt(msg.charAt(1),16);
-    if(n>=8){n-=8; input[3]=1;}else{input[3]=0;}
-    if(n>=4){n-=4; input[2]=1;}else{input[2]=0;}
-    if(n>=2){n-=2; input[1]=1;}else{input[1]=0;}
-    if(n>=1){n-=1; input[0]=1;}else{input[0]=0;}
+    if(n>=8){n-=8; input[3]=1;}
+    if(n>=4){n-=4; input[2]=1;}
+    if(n>=2){n-=2; input[1]=1;}
+    if(n>=1){n-=1; input[0]=1;}
+    input.tag = "input";
+    input.tickStamp = parseInt(msg.split(';')[2], 36);
+    return input;
 }
-
-codec.n = 0;
-codec.encodeMotion = function(base_objects, tickStamp){
-    var msg = "";
-    for(var i=0; i<base_objects.length; i++){
-        var object = base_objects[i];
-        if(object.tag == "fixed")continue;
-        msg+=(":"+Math.round(object.x*1296).toString(36)+
-        ":"+Math.round(object.y*1296).toString(36)+
-        ":"+Math.round(object.angle*1296).toString(36));
+codec.encodePack = function(pack){
+    if(pack.tag=="positions"){
+        return codec.encodeMotion(pack);
     }
-    msg+="&"+tickStamp.toString(36);//tick stamp
+    else if(pack.tag=="hpupdate"){
+        return JSON.stringify(pack);
+    }
+    else{
+        console.log("unable to encode pack with tag:"+pack.tag);
+        return "null";
+    }
+}
+codec.setMotionList = function(base_object){
+    this.motionList = [];
+    for(let i=0; i<base_object.length; i++){
+        if(base_object[i].tag=="fixed"){
+            this.motionList.push(false);
+        }
+        else{
+            this.motionList.push(true);
+        }
+    }
+}
+codec.encodeMotion = function(positions){
+    var msg = "";
+    for(var i=0; i<positions.length; i++){
+        var p = positions[i];
+        if(p.x==null)continue;
+        msg+=(":"+Math.round(p.x*1296).toString(36)+
+        ":"+Math.round(p.y*1296).toString(36)+
+        ":"+Math.round(p.angle*1296).toString(36));
+    }
+    msg+="&"+positions.tickStamp.toString(36);//tick stamp
     return msg;
 }
 
-codec.decodeMotion = function(base_objects, msg){
+codec.decodeMotion = function(msg){
     let lsts = msg.split(/[:&]/);
     let bi; let mi=1;
     let positions = [];
-    for(bi=0; bi<base_objects.length; bi++){
-        if(base_objects[bi].tag=="fixed"){//fixed objects don't need physics update
+    for(bi=0; bi<this.motionList.length; bi++){
+        if(this.motionList==false){//fixed objects don't need physics update
             positions.push({});
         }
         else{
@@ -45,4 +70,23 @@ codec.decodeMotion = function(base_objects, msg){
     positions.tickStamp = parseInt(lsts[mi++] ,36);
     positions.tag = "positions";
     return positions;
+}
+codec.decodeMessages = function(msg){
+    let messages = msg.split('|');
+    let r = [];
+    for(let i=0; i<messages.length; i++){
+        r.push(codec.decodeMessage(messages[i]));
+    }
+    return r;
+}
+codec.decodeMessage = function(msg){
+    if(msg.charAt(0)==':'){
+        return codec.decodeMotion(msg);
+    }
+    else if(msg.charAt(0)==';'){
+        return codec.decodeInput(msg);
+    }
+    else if(msg.charAt(0)=='{'){
+        return JSON.parse(msg);
+    }
 }

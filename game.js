@@ -3,6 +3,9 @@ var game = {};
 game.init = function(){
     game.init = function(){};
     base_generator.scene_div = document.getElementById("scene_div");
+    base_generator.damageSuma1 = document.getElementById("damage1");
+    base_generator.damageSuma2 = document.getElementById("damage2");
+    base_generator.ballhpa = document.getElementById("ballhp");
     base_generator.render_scale = 16;
     game.whohost = null;
     game.world = null;
@@ -14,24 +17,59 @@ game.init = function(){
     game.intervalCount = 0;
     game.sendInterval = 20;
     game.lastTime = null;
+    game.leftToSend = "";
     game.addKeyListening();
 }
 var peerConnectionSendFunc = function(){};
 
+game.addRenderAlterEvent = function(pack){
+    game.renderCache.addPack(pack);
+    if(game.whohost=="youhost"){
+        if(game.leftToSend.length>0)game.leftToSend+="|";
+        if(pack.tag)
+        game.leftToSend += codec.encodePack(pack);
+    }
+}
+game.addInputMessage = function(){
+    if(game.leftToSend.length>0)game.leftToSend+="|";
+    game.leftToSend += codec.encodeInput(game.inputs[0], game.tickStamp);
+}
 //ticktime
 game.timetick = function(deltaTime){
     if((game.whohost=="youhost"||game.whohost=="local")&&game.world){
-        game.world.step(deltaTime/2000);
-        game.world.step(deltaTime/2000);
-        base_generator.fromWorld(game.base_objects, game.world);
-        let p = shadowSys.takePositions(game.base_objects, game.tickStamp);
-        shadowSys.addPack(p);
+        if(game.whohost=="youhost"){
+            let cachedTime=game.opponentInputCache.getCachedTick();
+            let kdt = deltaTime;
+            if(cachedTime-kdt > 60){
+                kdt = cachedTime - 60;
+            }
+            else if(kdt > 40){
+                kdt*=1.2;
+            }
+            else if(kdt > 30){
+                
+            }
+            else{
+                kdt*=0.8;
+            }
+            let ks = game.opponentInputCache.getPacks(kdt);
+            if(ks.length>0)game.inputs[1] = ks[ks.length-1];
+        }
+        game.world.step(deltaTime/1000);
+        let p = game.takePositions();
+        //add to cache
+        game.addRenderAlterEvent(p);
         game.tickStamp+=deltaTime;
+    }
+    else if(game.whohost=="hehost"){
+        game.addInputMessage();
     }
     game.intervalCount += deltaTime;
     if(game.intervalCount>=game.sendInterval){
         game.intervalCount-=game.sendInterval;
-        peerConnectionSendFunc();
+        if(game.leftToSend.length>0){
+            peerConnectionSendFunc();
+        }
     }
 };
 
@@ -40,7 +78,7 @@ game.render = function(time){
         //console.log(JSON.stringify(shadowSys.shadowQueue));
         let deltaTime = game.lastTime ? (time - game.lastTime) : 0;
         game.lastTime = time;
-        let cachedTime = shadowSys.getQueueTime();
+        let cachedTime = game.renderCache.getCachedTick();
         if(cachedTime-deltaTime > 250){
             deltaTime = cachedTime - 250;
         }
@@ -53,9 +91,21 @@ game.render = function(time){
         else{
             deltaTime*=0.9;
         }
-        shadowSys.step(deltaTime);
-        let positions = shadowSys.computeCurrentPositions();
-        shadowSys.applyPositions(game.base_objects, positions);
+        let pastPacks = game.renderCache.getPacks(deltaTime);
+        for(let i=0; i<pastPacks.length; i++){
+            let pack = pastPacks[i];
+            if(pack.tag == "positions"){
+                game.applyPositions(pack);
+            }
+            else if(pack.tag == "hpupdate"){
+                game.base_objects[0].hp = pack.ballhp;
+                game.base_objects[1].damageSum = pack.damageSum1;
+                game.base_objects[2].damageSum = pack.damageSum2;
+            }
+            else{
+                console.log("Unknown pack tag: "+pack.tag);
+            }
+        }
 
         base_generator.render(game.base_objects);
     }
@@ -64,6 +114,35 @@ game.render = function(time){
 requestAnimationFrame(game.render);
 
 
+game.applyPositions = function(positions){
+    for(let i=0; i<game.base_objects.length; i++){
+        let position = positions[i];
+        if(position.x!=null){
+            let object = game.base_objects[i];
+            object.x = position.x;
+            object.y = position.y;
+            object.angle = position.angle;
+        }
+    }
+}
+game.takePositions = function(){
+    let positions = [];
+    positions.tickStamp = game.tickStamp;
+    for(let i=0; i<game.base_objects.length; i++){
+        let p = {};
+        let object = game.base_objects[i];
+        if(object.tag=="fixed"){
+        }
+        else{
+            p.x=object.body.position[0];
+            p.y=object.body.position[1];
+            p.angle=object.body.angle;
+        }
+        positions.push(p);
+    }
+    positions.tag = "positions";
+    return positions;
+}
 game.prepareGame = function(whohost, dataChannel){
     if(game.whohost!=null){
         console.log("Warning! Starting game without stopping the last game");
@@ -72,31 +151,32 @@ game.prepareGame = function(whohost, dataChannel){
     }
     game.base_objects = base_generator.level(0);
     game.tickStamp = 0;
-    //game.renderCache = new PackCache();
-    shadowSys.reset();
-    shadowSys.init(game.base_objects);
+    game.leftToSend = "";
+    game.renderCache = new PackCache();
+    codec.setMotionList(game.base_objects);
     //hoster
     game.whohost = whohost;
     if(game.whohost == "youhost"){
+        game.opponentInputCache = new PackCache();
         //channel
         peerConnectionSendFunc = function(){
-            connection_manager.dataChannel.send(codec.encodeMotion(game.base_objects, game.tickStamp));
+            connection_manager.dataChannel.send(game.leftToSend);
+            game.leftToSend = "";
         }
         dataChannel.onmessage = function(e){
-            //console.log("receive from p2p"+e.data);
-            var t = e.data.split(":");
-            //console.log("receive pack: "+t[t.length-1]);
-            codec.decodeInput(game.inputs[1], e.data);
+            let msgs = codec.decodeMessages(e.data);
+            for(let i=0; i<msgs.length; i++)
+                game.opponentInputCache.addPack(msgs[i])
         }
     }
     else if(game.whohost=="hehost"){
         peerConnectionSendFunc = function(){
-            connection_manager.dataChannel.send(codec.encodeInput(game.inputs[0]));
+            connection_manager.dataChannel.send(codec.encodeInput(game.inputs[0], game.tickStamp));
         }
         dataChannel.onmessage = function(e){
-            var ttt = e.data.split(":");
-            //console.log("receive from p2p"+ttt[ttt.length-1]+" time="+ new Date().getTime());
-            shadowSys.addPack(codec.decodeMotion(game.base_objects, e.data));
+            let packs = codec.decodeMessages(e.data);
+            for(let i=0; i<packs.length; i++)
+                game.renderCache.addPack(packs[i]);
         }
     }
 
@@ -108,14 +188,20 @@ game.prepareGame = function(whohost, dataChannel){
     }
 }
 game.stopGame = function(){
-    if(game.whohost=="youhost")game.whohost = "youhoststopped";
-    else if(game.whohost=="hehost")game.whohost = "hehoststopped";
+    if(game.whohost=="youhost"){
+        game.whohost = "youhoststopped";
+        //connection_manager.dataChannel.onmessage = function(){};
+    }
+    else if(game.whohost=="hehost"){
+        game.whohost = "hehoststopped";
+        //connection_manager.dataChannel.onmessage = function(){};
+    }
     else if(game.whohost=="local")game.whohost = "localstopped";
     else return;
-    connection_manager.dataChannel.onmessage = function(){};
-    peerConnectionSendFunc = function(){};
 }
 game.setRule = function(){
+    game.addRenderAlterEvent({tag:"hpupdate", damageSum1: game.base_objects[1].body.damageSum, 
+    ballhp: game.base_objects[0].body.hp, damageSum2: game.base_objects[2].body.damageSum, tickStamp: game.tickStamp});
     game.world.on("postStep", postStep);
 
     function postStep(){
@@ -151,32 +237,30 @@ game.setRule = function(){
         }
     });
     game.world.on("endContact", function(e){
+        let ballbody = game.base_objects[0].body;
         if(game.damageBeforeVelocity){
-            var deltaV = [-game.damageBeforeVelocity[0]+game.base_objects[0].body.velocity[0],
-                -game.damageBeforeVelocity[1]+game.base_objects[0].body.velocity[1]];
+            var deltaV = [-game.damageBeforeVelocity[0]+ballbody.velocity[0],
+                -game.damageBeforeVelocity[1]+ballbody.velocity[1]];
             var damage = deltaV[0]*deltaV[0]+deltaV[1]*deltaV[1];
             damage *= 0.003;
             damage = Math.round(damage);
-            game.base_objects[0].hp -= damage;
-            if(game.base_objects[0].hp>0){
-                console.log(game.base_objects[0].hp+" "+damage+" caused by "+(game.damaging==1?"car1":"car2"));
-            }
-            else{
-                if(game.damaging==1){
-                    console.log("car1 win");
+            if(damage>ballbody.hp)damage = ballbody.hp;
+            if(damage>0){
+                game.base_objects[game.damaging].body.damageSum+=damage;
+                ballbody.hp -= damage;
+                console.log(ballbody.hp+" "+damage+" caused by "+(game.damaging==1?"car1":"car2"));
+                game.addRenderAlterEvent({tag:"hpupdate", damageSum1: game.base_objects[1].body.damageSum, 
+                ballhp: ballbody.hp, damageSum2: game.base_objects[2].body.damageSum, tickStamp: game.tickStamp});
+                if(game.base_objects[0].body.hp==0){
+                    if(game.damaging==1){
+                        console.log("car1 win");
+                    }
+                    else{
+                        console.log("car2 win");
+                    }
+                    game.stopGame();
                 }
-                else{
-                    console.log("car2 win");
-                }
-                game.stopGame();
-            }/*
-            if(game.damaging==1){
-                console.log("end1");
             }
-            else{
-                console.log("end2");
-            }*/
-            //console.log("after"+game.base_objects[0].body.velocity);
             game.damageBeforeVelocity = null;
             game.damaging = null;
         }
@@ -191,6 +275,11 @@ game.endGame = function(){
         base_generator.destoryPhysics(game.base_objects);
         game.world = null;
     }
+    if(game.whohost=="youhoststopped"||game.whohost=="hehoststopped"){
+        connection_manager.dataChannel.onmessage = function(){};
+    }
+    peerConnectionSendFunc = function(){};
+    game.renderCache = null;
     base_generator.destoryGraphics(game.base_objects);
     game.base_objects = null;
     game.whohost = null;

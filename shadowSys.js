@@ -59,35 +59,6 @@ shadowSys.computeCurrentPositions = function(){
     return positionst;
     */
 }
-shadowSys.applyPositions = function(base_objects, positions){
-    for(let i=0; i<base_objects.length; i++){
-        let position = positions[i];
-        if(position.x!=null){
-            let object = base_objects[i];
-            object.x = position.x;
-            object.y = position.y;
-            object.angle = position.angle;
-        }
-    }
-}
-shadowSys.takePositions = function(base_objects, tickStamp){
-    let positions = [];
-    positions.tickStamp = tickStamp;
-    for(let i=0; i<base_objects.length; i++){
-        let p = {};
-        let object = base_objects[i];
-        if(object.tag=="fixed"){
-        }
-        else{
-            p.x=object.x;
-            p.y=object.y;
-            p.angle=object.angle;
-        }
-        positions.push(p);
-    }
-    positions.tag = "positions";
-    return positions;
-}
 shadowSys.getQueueTime = function(){
     if(shadowSys.shadowQueue[0]){
         return shadowSys.shadowQueue[shadowSys.shadowQueue.length-1].tickStamp - shadowSys.currentTickStamp;
