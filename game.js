@@ -6,6 +6,7 @@ game.init = function(){
     base_generator.damageSuma1 = document.getElementById("damage1");
     base_generator.damageSuma2 = document.getElementById("damage2");
     base_generator.ballhpa = document.getElementById("ballhp");
+    base_generator.resulta = document.getElementById("resulta");
     base_generator.render_scale = 16;
     game.whohost = null;
     game.world = null;
@@ -59,11 +60,11 @@ game.timetick = function(deltaTime){
         let p = game.takePositions();
         //add to cache
         game.addRenderAlterEvent(p);
-        game.tickStamp+=deltaTime;
     }
     else if(game.whohost=="hehost"){
         game.addInputMessage();
     }
+    game.tickStamp+=deltaTime;
     game.intervalCount += deltaTime;
     if(game.intervalCount>=game.sendInterval){
         game.intervalCount-=game.sendInterval;
@@ -101,6 +102,17 @@ game.render = function(time){
                 game.base_objects[0].hp = pack.ballhp;
                 game.base_objects[1].damageSum = pack.damageSum1;
                 game.base_objects[2].damageSum = pack.damageSum2;
+            }
+            else if(pack.tag == "result"){
+                if(game.whohost=="local"||game.whohost=="localstopped"){
+                    game.base_objects.result = pack.winner==1?"红方胜利":"蓝方胜利";
+                }
+                else if(game.whohost=="youhost"||game.whohost=="youhoststopped"){
+                    game.base_objects.result = pack.winner==1?"你赢了":"你输了";
+                }
+                else{
+                    game.base_objects.result = pack.winner==1?"你输了":"你赢了";
+                }
             }
             else{
                 console.log("Unknown pack tag: "+pack.tag);
@@ -149,20 +161,23 @@ game.prepareGame = function(whohost, dataChannel){
         game.stopGame();
         game.endGame();
     }
+    game.whohost = whohost;
     game.base_objects = base_generator.level(0);
     game.tickStamp = 0;
     game.leftToSend = "";
     game.renderCache = new PackCache();
     codec.setMotionList(game.base_objects);
-    //hoster
-    game.whohost = whohost;
+    
+    peerConnectionSendFunc = function(){
+        if(connection_manager.dataChannel.readyState!="open"){
+            return;
+        }
+        connection_manager.dataChannel.send(game.leftToSend);
+        game.leftToSend = "";
+    }
     if(game.whohost == "youhost"){
         game.opponentInputCache = new PackCache();
         //channel
-        peerConnectionSendFunc = function(){
-            connection_manager.dataChannel.send(game.leftToSend);
-            game.leftToSend = "";
-        }
         dataChannel.onmessage = function(e){
             let msgs = codec.decodeMessages(e.data);
             for(let i=0; i<msgs.length; i++)
@@ -170,9 +185,6 @@ game.prepareGame = function(whohost, dataChannel){
         }
     }
     else if(game.whohost=="hehost"){
-        peerConnectionSendFunc = function(){
-            connection_manager.dataChannel.send(codec.encodeInput(game.inputs[0], game.tickStamp));
-        }
         dataChannel.onmessage = function(e){
             let packs = codec.decodeMessages(e.data);
             for(let i=0; i<packs.length; i++)
@@ -248,16 +260,11 @@ game.setRule = function(){
             if(damage>0){
                 game.base_objects[game.damaging].body.damageSum+=damage;
                 ballbody.hp -= damage;
-                console.log(ballbody.hp+" "+damage+" caused by "+(game.damaging==1?"car1":"car2"));
+                //console.log(ballbody.hp+" "+damage+" caused by "+(game.damaging==1?"car1":"car2"));
                 game.addRenderAlterEvent({tag:"hpupdate", damageSum1: game.base_objects[1].body.damageSum, 
                 ballhp: ballbody.hp, damageSum2: game.base_objects[2].body.damageSum, tickStamp: game.tickStamp});
                 if(game.base_objects[0].body.hp==0){
-                    if(game.damaging==1){
-                        console.log("car1 win");
-                    }
-                    else{
-                        console.log("car2 win");
-                    }
+                    game.addRenderAlterEvent({tag: "result", winner: game.damaging, tickStamp: game.tickStamp});
                     game.stopGame();
                 }
             }

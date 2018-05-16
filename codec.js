@@ -19,7 +19,7 @@ codec.encodePack = function(pack){
     if(pack.tag=="positions"){
         return codec.encodeMotion(pack);
     }
-    else if(pack.tag=="hpupdate"){
+    else if(pack.tag=="hpupdate"||pack.tag=="result"){
         return JSON.stringify(pack);
     }
     else{

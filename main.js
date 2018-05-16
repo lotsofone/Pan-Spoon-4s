@@ -24,11 +24,11 @@ server_socket.onopen = function(){
 }
 server_socket.onclose = function(){
     console.log("socket close");
-    game.stopGame();
+    //game.stopGame();
 }
 server_socket.onerror = function(){
     console.log("socket error");
-    game.stopGame();
+    //game.stopGame();
 }
 
 

@@ -53,6 +53,9 @@ base_generator.render = function(base_objects){
     base_generator.damageSuma1.innerHTML = base_objects[1].damageSum;
     base_generator.damageSuma2.innerHTML = base_objects[2].damageSum;
     base_generator.ballhpa.innerHTML = base_objects[0].hp;
+    if(base_objects.result!=null){
+        base_generator.resulta.innerHTML = base_objects.result;
+    }
 }
 /*base_generator.fromWorld = function(base_objects, world){
     for(var i=0; i<base_objects.length; i++){
@@ -200,6 +203,9 @@ base_generator.destoryPhysics = function(base_objects){
         base_objects[i].vehicle = null;
     }
     base_generator.world = null;
+    base_generator.damageSuma1.innerHTML = "";
+    base_generator.damageSuma2.innerHTML = "";
+    base_generator.ballhpa.innerHTML = "";
 }
 base_generator.carObject = function(tag){
     /*let shape = {type:"convex", vertices:[
