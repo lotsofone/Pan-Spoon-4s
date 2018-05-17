@@ -272,3 +272,6 @@ function startMatch(){
 		}
 	});
 }
+function startLocal(){
+	game.prepareGame("local");
+}
