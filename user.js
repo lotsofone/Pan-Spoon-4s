@@ -223,6 +223,7 @@ function viewRecord(){
 		console.log(msg.tag);
 		console.log(msg.value[0]);
 		alert("当前用户为："+uname);
+		if(msg.value.length<1)return;
 		document.getElementById("date1").innerHTML=msg.value[0].date;
 	
 		if(msg.value[0].win==1)
@@ -235,6 +236,7 @@ function viewRecord(){
 		}
 		document.getElementById("pe1").innerHTML=msg.value[0].guest+"   VS   "+msg.value[0].host;
 
+		if(msg.value.length<2)return;
 		document.getElementById("date2").innerHTML=msg.value[1].date;
 	
 		if(msg.value[1].win==1)

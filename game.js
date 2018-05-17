@@ -113,6 +113,7 @@ game.render = function(time){
                 else{
                     game.base_objects.result = pack.winner==1?"你输了":"你赢了";
                 }
+                game.stopGame();
             }
             else{
                 console.log("Unknown pack tag: "+pack.tag);

@@ -83,6 +83,13 @@ connection_manager.startPeerConnection = function(starter){
     this.peerConnection.onicecandidate = function(e){
         this.server_socket.send(">"+JSON.stringify({tag: "candidate", candidate: e.candidate}));//send candidate to the other one
     }
+    //state changes
+    this.peerConnection.onconnectionstatechange = function(){
+        console.log("peerConnection connectionState "+connection_manager.peerConnection.connectionState);
+    }
+    this.peerConnection.oniceconnectionstatechange = function(){
+        console.log("peerConnection iceConnectionState "+connection_manager.peerConnection.iceConnectionState);
+    }
 }
 connection_manager.closePeerConnection = function(){
     this.dataChannel.close();
