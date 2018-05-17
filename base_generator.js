@@ -29,7 +29,7 @@ base_generator.generateGraphics = function(base_objects){
         element.style.position = "absolute";
         element.style.top = object.y*base_generator.render_scale;
         element.style.left = object.x*base_generator.render_scale;
-        element.style.transform = "translateY(-50%) translateX(-50%) rotate("+object.angle+"deg)";
+        element.style.transform = "translateY(-50%) translateX(-50%) rotate("+object.angle+"rad)";
         base_generator.scene_div.appendChild(element);
         object.element = element;
     }

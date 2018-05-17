@@ -80,8 +80,8 @@ game.render = function(time){
         let deltaTime = game.lastTime ? (time - game.lastTime) : 0;
         game.lastTime = time;
         let cachedTime = game.renderCache.getCachedTick();
-        if(cachedTime-deltaTime > 250){
-            deltaTime = cachedTime - 250;
+        if(cachedTime-deltaTime > 380){
+            deltaTime = cachedTime - 380;
         }
         else if(cachedTime > 200){
             deltaTime*=1.1;
@@ -286,6 +286,7 @@ game.endGame = function(){
     if(game.whohost=="youhoststopped"||game.whohost=="hehoststopped"){
         connection_manager.dataChannel.onmessage = function(){};
     }
+    game.inputs = [[0, 0, 0, 0],[0, 0, 0, 0 ]];
     peerConnectionSendFunc = function(){};
     game.renderCache = null;
     base_generator.destoryGraphics(game.base_objects);

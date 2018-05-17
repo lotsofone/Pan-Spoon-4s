@@ -56,7 +56,7 @@ codec.decodeMotion = function(msg){
     let bi; let mi=1;
     let positions = [];
     for(bi=0; bi<this.motionList.length; bi++){
-        if(this.motionList==false){//fixed objects don't need physics update
+        if(this.motionList[bi]==false){//fixed objects don't need physics update
             positions.push({});
         }
         else{
