@@ -39,6 +39,10 @@ base_generator.destoryGraphics = function(base_objects){
         base_objects[i].element = null;
     }
     base_generator.scene_div.innerHTML = "";
+    base_generator.damageSuma1.innerHTML = "";
+    base_generator.damageSuma2.innerHTML = "";
+    base_generator.ballhpa.innerHTML = "";
+    base_generator.resulta.innerHTML = "";
 }
 base_generator.render = function(base_objects){
     for(var i=0; i<base_objects.length; i++){
