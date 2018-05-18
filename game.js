@@ -16,7 +16,7 @@ game.init = function(){
     game.tickInterval = 10;
     setInterval("game.timetick("+game.tickInterval+")", game.tickInterval);
     game.intervalCount = 0;
-    game.sendInterval = 40;
+    game.sendInterval = 50;
     game.lastTime = null;
     game.leftToSend = "";
     game.keyCatchTimes = [10, 20, 60];
@@ -109,6 +109,7 @@ game.render = function(time){
             else if(pack.tag =="motions"){
                 if(pack.tickStamp>=game.renderedMotionTickStamp){
                     game.renderedMotionTickStamp = pack.tickStamp;
+                    game.stepedTickStamp = pack.tickStamp;
                     game.currentMotionPack = pack;
                 }
             }
@@ -138,8 +139,9 @@ game.render = function(time){
         }
         if(game.whohost=="hehost"){
             game.motionsToWorld(game.currentMotionPack);
-            game.world.step(game.tickInterval/1000, (game.renderCache.tickStamp-game.currentMotionPack.tickStamp)/1000, parseInt(1000/game.tickInterval)+1);
-            let ps = game.takePositions();
+            game.world.step(game.tickInterval/1000, (game.renderCache.tickStamp-game.stepedTickStamp)/1000, parseInt(100/game.tickInterval)+1);
+            game.stepedTickStamp = game.renderCache.tickStamp;
+            let ps = game.takeInterpolatedPositions();
             game.applyPositions(ps);
             //ttt
             //console.log(game.base_objects[2].x+" otc:"+game.renderCache.tickStamp);
