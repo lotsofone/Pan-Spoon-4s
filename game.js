@@ -106,14 +106,13 @@ game.render = function(time){
             deltaTime*=0.9;
         }
         let pastPacks = game.renderCache.getPacks(deltaTime);
+        if(pastPacks.length>0){
+            if(game.renderCache.tickStamp-pastPacks[pastPacks.length-1].tickStamp>1000){//本地跟随钟超过对方时钟1000毫秒，则立即回退
+                game.renderCache.tickStamp=pastPacks[pastPacks.length-1].tickStamp;
+            }
+        }
         for(let i=0; i<pastPacks.length; i++){
             let pack = pastPacks[i];
-            if(game.renderCache.tickStamp-pack.tickStamp>1000){//保护措施，防止时差过长导致计算量激增。如果是堆积包，后面会追回
-                game.renderCache.tickStamp=pack.tickStamp+game.tickInterval;
-            }
-            else if(game.renderCache.tickStamp-pack.tickStamp<game.tickInterval){
-                game.renderCache.tickStamp=pack.tickStamp+game.tickInterval;
-            }
             if(pack.tag == "positions"){
                 game.applyPositions(pack);
             }
@@ -122,6 +121,7 @@ game.render = function(time){
                     game.renderedMotionTickStamp = pack.tickStamp;
                     game.stepedTickStamp = pack.tickStamp;
                     game.currentMotionPack = pack;
+                    game.motionsToWorld(game.currentMotionPack);
                 }
             }
             else if(pack.tag == "hpupdate"){
@@ -149,7 +149,6 @@ game.render = function(time){
             }
         }
         if(game.whohost=="hehost"){
-            game.motionsToWorld(game.currentMotionPack);
             game.world.step(game.tickInterval/1000, (game.renderCache.tickStamp-game.stepedTickStamp)/1000, parseInt(100/game.tickInterval)+1);
             game.stepedTickStamp = game.renderCache.tickStamp;
             let ps = game.takeInterpolatedPositions();
