@@ -16,7 +16,7 @@ game.init = function(){
     game.tickInterval = 10;
     setInterval("game.timetick("+game.tickInterval+")", game.tickInterval);
     game.intervalCount = 0;
-    game.sendInterval = 50;
+    game.sendInterval = 40;
     game.lastTime = null;
     game.leftToSend = "";
     game.keyCatchTimes = [10, 20, 60];
@@ -57,7 +57,12 @@ game.timetick = function(deltaTime){
                 kdt*=0.8;
             }
             let ks = game.opponentInputCache.getPacks(kdt);
-            if(ks.length>0)game.inputs[1] = ks[ks.length-1];
+            if(ks.length>0){
+                game.inputs[1] = ks[ks.length-1];
+                if(game.opponentInputCache.tickStamp-ks[ks.length-1].tickStamp>1000){//本地时钟快过对方超过1秒，表示失去同步
+                    game.opponentInputCache.tickStamp=ks[ks.length-1].tickStamp;
+                }
+            }
         }
         game.world.step(deltaTime/1000);
         let p = game.takePositions();
@@ -103,6 +108,12 @@ game.render = function(time){
         let pastPacks = game.renderCache.getPacks(deltaTime);
         for(let i=0; i<pastPacks.length; i++){
             let pack = pastPacks[i];
+            if(game.renderCache.tickStamp-pack.tickStamp>1000){//保护措施，防止时差过长导致计算量激增。如果是堆积包，后面会追回
+                game.renderCache.tickStamp=pack.tickStamp+game.tickInterval;
+            }
+            else if(game.renderCache.tickStamp-pack.tickStamp<game.tickInterval){
+                game.renderCache.tickStamp=pack.tickStamp+game.tickInterval;
+            }
             if(pack.tag == "positions"){
                 game.applyPositions(pack);
             }
