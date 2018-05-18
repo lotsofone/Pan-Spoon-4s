@@ -302,4 +302,5 @@ function startLocal(){
 		game.endGame();
 	}
 	game.prepareGame("local");
+	document.getElementById("game_status").innerHTML = "本地游戏中";
 }
