@@ -120,6 +120,9 @@ game.render = function(time){
                     game.base_objects.result = pack.winner==1?"你输了":"你赢了";
                 }
                 game.stopGame();
+                if(game.base_objects.result == "你赢了"){
+                    connection_manager.server_socket.send(JSON.stringify({tag:"win"}));
+                }
             }
             else{
                 console.log("Unknown pack tag: "+pack.tag);
@@ -176,7 +179,7 @@ game.prepareGame = function(whohost, dataChannel){
     codec.setMotionList(game.base_objects);
     
     peerConnectionSendFunc = function(){
-        if(connection_manager.dataChannel.readyState!="open"){
+        if(connection_manager.dataChannel==null||connection_manager.dataChannel.readyState!="open"){
             return;
         }
         connection_manager.dataChannel.send(game.leftToSend);

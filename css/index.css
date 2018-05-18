@@ -14,10 +14,14 @@
     transform: scale(0.0625);
 }
 #damage1{
+    position: relative;
+    z-index: 100;
+    font-size: 24px;
     float: left;
     color: #FF6666;
 }
 #ballhp{
+    font-size: 24px;
     position: absolute;
     margin-left: 50%;
     transform: TranslateX(-50%);
@@ -25,6 +29,9 @@
     color: #996600;
 }
 #damage2{
+    position: relative;
+    z-index: 100;
+    font-size: 24px;
     float: right;
     color: #3399FF;
 }
@@ -32,9 +39,9 @@
     display: block;
     font-size: 50px;
     position: absolute;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%) translateY(-50%);
     z-index: 100;
     opacity: 0.5;
-    margin-top: 50%;
+    margin-top: 30%;
     margin-left: 50%;
 }

@@ -246,6 +246,13 @@ function tryp2p(msg){
 		game.prepareGame(msg.whohost, connection_manager.dataChannel);
 		document.getElementById("game_status").innerHTML = "";
 		console.log("channel open");
+		connection_manager.peerConnection.oniceconnectionstatechange = function(){
+			console.log("peerConnection iceConnectionState "+connection_manager.peerConnection.iceConnectionState);
+			if(connection_manager.peerConnection.iceConnectionState=="disconnected"){
+				document.getElementById("game_status").innerHTML = "连接已中断";
+			}
+			connection_manager.peerConnection.oniceconnectionstatechange = function(){};
+		}
 	}
 	connection_manager.dataChannel.onerror = function(e){
 		game.stopGame();
@@ -279,13 +286,13 @@ function closeMatch(){
 }
 function addgetmsg(){
 	connection_manager.setDistributionFunction("chat", function(msg){
-		document.getElementById("chattext").innerHTML+='<p>'+msg.username+": "+msg.text+'</p>';
+		document.getElementById("chattext").innerHTML+='<p>'+(msg.username==""?"游客":msg.username)+": "+msg.text+'</p>';
 	});
 }
 function sendmsg(){
 	chatmsg=document.getElementById("textsend").value;
 	//alert(sendmsg);
-	document.getElementById("chattext").innerHTML+='<p>'+uname+": "+chatmsg+'</p>';
+	document.getElementById("chattext").innerHTML+='<p>'+(uname==""?"(你)":unsme)+": "+chatmsg+'</p>';
 	document.getElementById("textsend").value = "";
 	connection_manager.server_socket.send(">"+JSON.stringify({tag:'chat', username:uname, text:chatmsg}));
 }
