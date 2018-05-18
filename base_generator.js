@@ -90,7 +90,12 @@ base_generator.generatePhysics = function(base_objects){
             position: [object.x, object.y],
             angle: object.angle,
         };
-        if(object.tag!="fixed"){
+        if(object.tag=="fixed"){
+        }
+        else if(object.mass!=null){
+            option.mass = object.mass;
+        }
+        else{
             option.mass = 1;
         }
         var body = new p2.Body(option);
@@ -125,7 +130,7 @@ base_generator.generatePhysics = function(base_objects){
         object.body = body;
         //body vehicle
         if(object.tag=="box"){
-            var f = 100;
+            var f = 50;
             f/=4;
             var vehicle = new p2.TopDownVehicle(object.body);
             var wheel;
@@ -156,7 +161,23 @@ base_generator.generatePhysics = function(base_objects){
             vehicle.addToWorld(base_generator.world);
         }
         else if(object.tag=="ball"){
-            var f = 10;
+            var f = 5;
+            f/=4;
+            var vehicle = new p2.TopDownVehicle(object.body);
+            var wheel;
+            var l = object.width*2/3*0.02;
+            wheel = vehicle.addWheel({localPosition: [l, 0] });
+            wheel.setBrakeForce(f); wheel.setSideFriction(f);
+            wheel = vehicle.addWheel({localPosition: [-l, 0] });
+            wheel.setBrakeForce(f); wheel.setSideFriction(f);
+            wheel = vehicle.addWheel({localPosition: [0, l] });
+            wheel.setBrakeForce(f); wheel.setSideFriction(f);
+            wheel = vehicle.addWheel({localPosition: [0, -l] });
+            wheel.setBrakeForce(f); wheel.setSideFriction(f);
+            vehicle.addToWorld(base_generator.world);
+        }
+        else if(object.tag=="circle"){
+            var f = 50;
             f/=4;
             var vehicle = new p2.TopDownVehicle(object.body);
             var wheel;
@@ -232,25 +253,43 @@ base_generator.carObject = function(tag){
         shape.vertices.push([-shape.vertices[l-i][0],shape.vertices[l-i][1]]);
     }
     if(tag=="car1"){
-        return{x:0, y:200, angle:180, width:49.5, height:99.5, src:"car1.png", tag:"car1", shape:shape, damageSum:0};
+        return{x:-380, y:0, angle:270, width:49.5, height:99.5, src:"car1.png", tag:"car1", shape:shape, damageSum:0, mass:1};
     }
     else{
-        return{x:0, y:-200, angle:0, width:49.5, height:99.5, src:"car2.png", tag:"car2", shape:shape, damageSum:0};
+        return{x:380, y:0, angle:90, width:49.5, height:99.5, src:"car2.png", tag:"car2", shape:shape, damageSum:0, mass:1};
     }
 }
 base_generator.level = function(i){
     if(i==0){
         let base_objects = [];
         base_objects.push({x:0, y:0, width:32, height:32, angle:0, src:"ball.png", tag:"ball", shape:{type:"circle", radius: 16},
-            hp: 1000}); //ball
+            hp: 1000, mass: 1}); //ball
         base_objects.push(base_generator.carObject("car1")); //p1body
         base_objects.push(base_generator.carObject("car2")); //p2body
-        base_objects.push({x:-100, y:0, width:60, height:60, angle:0, src:"", tag:"box"}); //box
-        base_objects.push({x:100, y:0, width:22, height:500, angle:0, src:"", tag:"box"}); //box
-        base_objects.push({x:300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
-        base_objects.push({x:-300, y:0, width:10, height:600, angle:0, src:"", tag:"fixed"}); //
-        base_objects.push({x:0, y:300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
-        base_objects.push({x:0, y:-300, width:10, height:600, angle:90, src:"", tag:"fixed"}); //
+        base_objects.push({x:450, y:0, width:10, height:540, angle:0, src:"solid.png", tag:"fixed"}); //edge
+        base_objects.push({x:-450, y:0, width:10, height:540, angle:0, src:"solid.png", tag:"fixed"}); //edge
+        base_objects.push({x:0, y:270, width:10, height:900, angle:90, src:"solid.png", tag:"fixed"}); //edge
+        base_objects.push({x:0, y:-270, width:10, height:900, angle:90, src:"solid.png", tag:"fixed"}); //edge
+        base_objects.push({x:-60, y:20, width:40, height:40, angle:0, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:60, y:-20, width:40, height:40, angle:0, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:-20, y:60, width:40, height:40, angle:0, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:20, y:-60, width:40, height:40, angle:0, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:20, y:60, width:40, height:40, angle:0, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:-20, y:-60, width:40, height:40, angle:0, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:60, y:20, width:40, height:40, angle:0, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:-60, y:-20, width:40, height:40, angle:0, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:140, y:211, width:60, height:60, angle:29, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:-140, y:-211, width:60, height:60, angle:29, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:-300, y:20, width:60, height:60, angle:0, src:"circle.png", tag:"circle", shape:{type:"circle", radius: 30}}); //box
+        base_objects.push({x:300, y:-20, width:60, height:60, angle:0, src:"circle.png", tag:"circle", shape:{type:"circle", radius: 30}}); //box
+        base_objects.push({x:-360, y:70, width:50, height:50, angle:0, src:"circle.png", tag:"circle", shape:{type:"circle", radius: 25}}); //box
+        base_objects.push({x:360, y:-70, width:50, height:50, angle:0, src:"circle.png", tag:"circle", shape:{type:"circle", radius: 25}}); //box
+        base_objects.push({x:-180, y:-14, width:70, height:70, angle:0, src:"circle.png", tag:"circle", shape:{type:"circle", radius: 35}}); //box
+        base_objects.push({x:180, y:14, width:70, height:70, angle:0, src:"circle.png", tag:"circle", shape:{type:"circle", radius: 35}}); //box
+        base_objects.push({x:-199, y:111, width:50, height:80, angle:56, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:199, y:-111, width:50, height:80, angle:56, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:-15, y:180, width:40, height:240, angle:77, src:"box.png", tag:"box"}); //box
+        base_objects.push({x:15, y:-180, width:40, height:240, angle:77, src:"box.png", tag:"box"}); //box
         for(let i=0; i<base_objects.length; i++){
             base_objects[i].angle *= Math.PI/180;
         }

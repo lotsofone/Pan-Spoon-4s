@@ -22,7 +22,6 @@ game.init = function(){
     game.keyCatchTimes = [10, 20, 60];
     game.hostCatchTImes = [60, 100, 150];
     game.guestCatchTImes = [20, 40, 90];
-    //game.guestCatchTImes = [110, 140, 190];
     game.addKeyListening();
 }
 var peerConnectionSendFunc = function(){};
@@ -310,13 +309,14 @@ game.setRule = function(){
         vehicle_fu(game.base_objects[2], game.inputs[1]);
     }
     function vehicle_fu(object, input){
+        let power = 120/4;
         var vehicle = object.vehicle;
-        vehicle.lf.engineForce = 30*(input[1]-input[3]);
-        vehicle.rf.engineForce = 30*(input[1]-input[3]);
+        vehicle.lf.engineForce = power*(input[1]-input[3]);
+        vehicle.rf.engineForce = power*(input[1]-input[3]);
         vehicle.lf.steerValue = Math.PI/4*(input[2]-input[0]);
         vehicle.rf.steerValue = Math.PI/4*(input[2]-input[0]);
-        vehicle.lb.engineForce = 30*(input[1]-input[3]);
-        vehicle.rb.engineForce = 30*(input[1]-input[3]);
+        vehicle.lb.engineForce = power*(input[1]-input[3]);
+        vehicle.rb.engineForce = power*(input[1]-input[3]);
         //vehicle.lb.steerValue = -Math.PI/4*(input[2]-input[0]);
         //vehicle.rb.steerValue = -Math.PI/4*(input[2]-input[0]);
     }
