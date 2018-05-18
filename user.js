@@ -292,7 +292,7 @@ function addgetmsg(){
 function sendmsg(){
 	chatmsg=document.getElementById("textsend").value;
 	//alert(sendmsg);
-	document.getElementById("chattext").innerHTML+='<p>'+(uname==""?"(你)":unsme)+": "+chatmsg+'</p>';
+	document.getElementById("chattext").innerHTML+='<p>'+(uname==""?"(你)":uname)+": "+chatmsg+'</p>';
 	document.getElementById("textsend").value = "";
 	connection_manager.server_socket.send(">"+JSON.stringify({tag:'chat', username:uname, text:chatmsg}));
 }
