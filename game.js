@@ -19,12 +19,10 @@ game.init = function(){
     game.sendInterval = 40;
     game.lastTime = null;
     game.leftToSend = "";
-    game.keyCatchTimes = [30, 40, 60];
-    game.hostCatchTImes = [260, 300, 380];
-    game.guestCatchTImes = [230, 260, 320];
-    //game.keyCatchTimes = [30, 40, 60];
-    //game.hostCatchTImes = [360, 400, 500];
-    //game.guestCatchTImes = [330, 360, 440];
+    game.keyCatchTimes = [10, 20, 60];
+    game.hostCatchTImes = [60, 100, 150];
+    game.guestCatchTImes = [20, 40, 90];
+    //game.guestCatchTImes = [110, 140, 190];
     game.addKeyListening();
 }
 var peerConnectionSendFunc = function(){};
