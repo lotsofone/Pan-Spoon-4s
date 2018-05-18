@@ -16,7 +16,7 @@ codec.decodeInput = function(msg){
     return input;
 }
 codec.encodePack = function(pack){
-    if(pack.tag=="positions"){
+    if(pack.tag=="motions"){
         return codec.encodeMotion(pack);
     }
     else if(pack.tag=="hpupdate"||pack.tag=="result"){
@@ -38,38 +38,44 @@ codec.setMotionList = function(base_object){
         }
     }
 }
-codec.encodeMotion = function(positions){
+codec.encodeMotion = function(motions){
     var msg = "";
-    for(var i=0; i<positions.length; i++){
-        var p = positions[i];
+    for(var i=0; i<motions.length; i++){
+        var p = motions[i];
         if(p.x==null)continue;
         msg+=(":"+Math.round(p.x*1296).toString(36)+
         ":"+Math.round(p.y*1296).toString(36)+
-        ":"+Math.round(p.angle*1296).toString(36));
+        ":"+Math.round(p.angle*1296).toString(36)+
+        ":"+Math.round(p.vx*1296).toString(36)+
+        ":"+Math.round(p.vy*1296).toString(36)+
+        ":"+Math.round(p.va*1296).toString(36));
     }
-    msg+="&"+positions.tickStamp.toString(36);//tick stamp
+    msg+="&"+motions.tickStamp.toString(36);//tick stamp
     return msg;
 }
 
 codec.decodeMotion = function(msg){
     let lsts = msg.split(/[:&]/);
     let bi; let mi=1;
-    let positions = [];
+    let motions = [];
     for(bi=0; bi<this.motionList.length; bi++){
         if(this.motionList[bi]==false){//fixed objects don't need physics update
-            positions.push({});
+            motions.push({});
         }
         else{
-            let position = {};
-            position.x = parseInt(lsts[mi++],36)/1296;
-            position.y = parseInt(lsts[mi++],36)/1296;
-            position.angle = parseInt(lsts[mi++],36)/1296;
-            positions.push(position);
+            let motion = {};
+            motion.x = parseInt(lsts[mi++],36)/1296;
+            motion.y = parseInt(lsts[mi++],36)/1296;
+            motion.angle = parseInt(lsts[mi++],36)/1296;
+            motion.vx = parseInt(lsts[mi++],36)/1296;
+            motion.vy = parseInt(lsts[mi++],36)/1296;
+            motion.va = parseInt(lsts[mi++],36)/1296;
+            motions.push(motion);
         }
     }
-    positions.tickStamp = parseInt(lsts[mi++] ,36);
-    positions.tag = "positions";
-    return positions;
+    motions.tickStamp = parseInt(lsts[mi++] ,36);
+    motions.tag = "motions";
+    return motions;
 }
 codec.decodeMessages = function(msg){
     let messages = msg.split('|');

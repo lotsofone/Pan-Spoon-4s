@@ -16,7 +16,7 @@ game.init = function(){
     game.tickInterval = 10;
     setInterval("game.timetick("+game.tickInterval+")", game.tickInterval);
     game.intervalCount = 0;
-    game.sendInterval = 20;
+    game.sendInterval = 40;
     game.lastTime = null;
     game.leftToSend = "";
     game.keyCatchTimes = [30, 40, 60];
@@ -65,7 +65,7 @@ game.timetick = function(deltaTime){
         game.world.step(deltaTime/1000);
         let p = game.takePositions();
         //add to cache
-        game.addRenderAlterEvent(p);
+        game.renderCache.addPack(p);
     }
     else if(game.whohost=="hehost"){
         game.addInputMessage();
@@ -73,11 +73,16 @@ game.timetick = function(deltaTime){
     game.tickStamp+=deltaTime;
     game.intervalCount += deltaTime;
     if(game.intervalCount>=game.sendInterval){
-        game.intervalCount-=game.sendInterval;
+        if(game.whohost=="youhost"){
+            if(game.leftToSend.length>0)game.leftToSend+="|";
+            let p = game.takeMotions();
+            game.leftToSend += codec.encodePack(p);
+        }
         if(game.leftToSend.length>0){
             peerConnectionSendFunc();
         }
     }
+    game.intervalCount%=game.sendInterval;
 };
 
 game.render = function(time){
@@ -104,6 +109,12 @@ game.render = function(time){
             if(pack.tag == "positions"){
                 game.applyPositions(pack);
             }
+            else if(pack.tag =="motions"){
+                if(pack.tickStamp>=game.renderedMotionTickStamp){
+                    game.renderedMotionTickStamp = pack.tickStamp;
+                    game.currentMotionPack = pack;
+                }
+            }
             else if(pack.tag == "hpupdate"){
                 game.base_objects[0].hp = pack.ballhp;
                 game.base_objects[1].damageSum = pack.damageSum1;
@@ -128,6 +139,14 @@ game.render = function(time){
                 console.log("Unknown pack tag: "+pack.tag);
             }
         }
+        if(game.whohost=="hehost"){
+            game.motionsToWorld(game.currentMotionPack);
+            game.world.step(game.tickInterval/1000, (game.renderCache.tickStamp-game.currentMotionPack.tickStamp)/1000, parseInt(1000/game.tickInterval)+1);
+            let ps = game.takePositions();
+            game.applyPositions(ps);
+            //ttt
+            //console.log(game.base_objects[2].x+" otc:"+game.renderCache.tickStamp);
+        }
 
         base_generator.render(game.base_objects);
     }
@@ -147,6 +166,36 @@ game.applyPositions = function(positions){
         }
     }
 }
+game.motionsToWorld = function(motions){
+    for(let i=0; i<game.base_objects.length; i++){
+        let motion = motions[i];
+        if(motion.x!=null){
+            let body = game.base_objects[i].body;
+            body.position = [motion.x, motion.y];
+            body.angle = motion.angle;
+            body.velocity = [motion.vx, motion.vy];
+            body.angularVelocity = motion.va;
+        }
+    }
+}
+game.takeInterpolatedPositions = function(){
+    let positions = [];
+    positions.tickStamp = game.tickStamp;
+    for(let i=0; i<game.base_objects.length; i++){
+        let p = {};
+        let object = game.base_objects[i];
+        if(object.tag=="fixed"){
+        }
+        else{
+            p.x=object.body.interpolatedPosition[0];
+            p.y=object.body.interpolatedPosition[1];
+            p.angle=object.body.interpolatedAngle;
+        }
+        positions.push(p);
+    }
+    positions.tag = "positions";
+    return positions;
+}
 game.takePositions = function(){
     let positions = [];
     positions.tickStamp = game.tickStamp;
@@ -165,6 +214,27 @@ game.takePositions = function(){
     positions.tag = "positions";
     return positions;
 }
+game.takeMotions = function(){
+    let motions = [];
+    motions.tickStamp = game.tickStamp;
+    for(let i=0; i<game.base_objects.length; i++){
+        let p = {};
+        let object = game.base_objects[i];
+        if(object.tag=="fixed"){
+        }
+        else{
+            p.x=object.body.position[0];
+            p.y=object.body.position[1];
+            p.angle=object.body.angle;
+            p.vx=object.body.velocity[0];
+            p.vy=object.body.velocity[1];
+            p.va=object.body.angularVelocity;
+        }
+        motions.push(p);
+    }
+    motions.tag = "motions";
+    return motions;
+}
 game.prepareGame = function(whohost, dataChannel){
     if(game.whohost!=null){
         console.log("Warning! Starting game without stopping the last game");
@@ -177,6 +247,7 @@ game.prepareGame = function(whohost, dataChannel){
     game.leftToSend = "";
     game.renderCache = new PackCache();
     codec.setMotionList(game.base_objects);
+    game.renderedMotionTickStamp = 0;
     
     peerConnectionSendFunc = function(){
         if(connection_manager.dataChannel==null||connection_manager.dataChannel.readyState!="open"){
@@ -213,6 +284,10 @@ game.prepareGame = function(whohost, dataChannel){
     if(game.whohost == "youhost"||game.whohost=="local"){
         game.world = base_generator.generatePhysics(game.base_objects);
         game.setRule();
+    }
+    else{//hehost
+        game.world = base_generator.generatePhysics(game.base_objects);//used only for dead reckoning
+        game.currentMotionPack = game.takeMotions();
     }
 }
 game.stopGame = function(){
@@ -294,10 +369,8 @@ game.endGame = function(){
     if(game.whohost=="youhost"||game.whohost=="hehost"||game.whohost=="local"){
         game.stopGame();
     }
-    if(game.whohost=="youhoststopped"||game.whohost=="localstopped"){
-        base_generator.destoryPhysics(game.base_objects);
-        game.world = null;
-    }
+    base_generator.destoryPhysics(game.base_objects);
+    game.world = null;
     if(game.whohost=="youhoststopped"||game.whohost=="hehoststopped"){
         connection_manager.dataChannel.onmessage = function(){};
     }
