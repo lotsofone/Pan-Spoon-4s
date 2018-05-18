@@ -11,6 +11,7 @@ connection_manager.iceServers = [{urls: "stun:stun.xten.com"}, {urls: "stun:stun
     base_generator.imgPath = "images/";
 //开启与服务器的连接
 connection_manager.startSocket();
+addgetmsg();//添加对聊天信息的监听
 //game.prepareGame("local");
 /*
 connection_manager.setDistributionFunction("pairing success", function(message){

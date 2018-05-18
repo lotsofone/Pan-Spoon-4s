@@ -19,6 +19,12 @@ game.init = function(){
     game.sendInterval = 20;
     game.lastTime = null;
     game.leftToSend = "";
+    game.keyCatchTimes = [30, 40, 60];
+    game.hostCatchTImes = [80, 110, 260];
+    game.guestCatchTImes = [110, 150, 200];
+    //game.keyCatchTimes = [30, 40, 60];
+    //game.hostCatchTImes = [360, 400, 500];
+    //game.guestCatchTImes = [330, 360, 440];
     game.addKeyListening();
 }
 var peerConnectionSendFunc = function(){};
@@ -41,13 +47,13 @@ game.timetick = function(deltaTime){
         if(game.whohost=="youhost"){
             let cachedTime=game.opponentInputCache.getCachedTick();
             let kdt = deltaTime;
-            if(cachedTime-kdt > 60){
-                kdt = cachedTime - 60;
+            if(cachedTime-kdt > game.keyCatchTimes[2]){
+                kdt = cachedTime - game.keyCatchTimes[2];
             }
-            else if(kdt > 40){
+            else if(kdt > game.keyCatchTimes[1]){
                 kdt*=1.2;
             }
-            else if(kdt > 30){
+            else if(kdt > game.keyCatchTimes[0]){
                 
             }
             else{
@@ -80,13 +86,13 @@ game.render = function(time){
         let deltaTime = game.lastTime ? (time - game.lastTime) : 0;
         game.lastTime = time;
         let cachedTime = game.renderCache.getCachedTick();
-        if(cachedTime-deltaTime > 380){
-            deltaTime = cachedTime - 380;
+        if(cachedTime-deltaTime > game.renderCatchTimes[2]){
+            deltaTime = cachedTime - game.renderCatchTimes[2];
         }
-        else if(cachedTime > 200){
+        else if(cachedTime > game.renderCatchTimes[1]){
             deltaTime*=1.1;
         }
-        else if(cachedTime > 140){
+        else if(cachedTime > game.renderCatchTimes[0]){
             
         }
         else{
@@ -177,6 +183,8 @@ game.prepareGame = function(whohost, dataChannel){
         game.leftToSend = "";
     }
     if(game.whohost == "youhost"){
+        //catchtime
+        game.renderCatchTimes = game.hostCatchTImes;
         game.opponentInputCache = new PackCache();
         //channel
         dataChannel.onmessage = function(e){
@@ -186,11 +194,15 @@ game.prepareGame = function(whohost, dataChannel){
         }
     }
     else if(game.whohost=="hehost"){
+        game.renderCatchTimes = game.guestCatchTImes;
         dataChannel.onmessage = function(e){
             let packs = codec.decodeMessages(e.data);
             for(let i=0; i<packs.length; i++)
                 game.renderCache.addPack(packs[i]);
         }
+    }
+    else if(game.whohost=="local"){
+        game.renderCatchTimes = [0, 0, 0];
     }
 
     //generate according to whohost

@@ -23,46 +23,32 @@ function loginForm(){
 	  var ntip = checkName(); 
 	  var ptip = checkPwd();
 	  if(ntip&&ptip){
-	 	 alert("登录");
 	  	 uname=document.getElementById('Name').value;
 	  	var ename = document.getElementById('nerr'); 
 		var upassword=document.getElementById('Password').value;
 		var epassword=document.getElementById('perr');
+		var lognname=document.getElementById('logname');
 	 	 connection_manager.server_socket.send(JSON.stringify({tag:'login', username:uname, 
 	 		 password:upassword}));
 	 	 connection_manager.setDistributionFunction("success", function(msg){
 			console.log(msg.tag);
-			//显示成功
-			//
-			//
-			logres();
-		 	var logmssg=document.getElementById("logmsg");
-			logmssg.innerHTML="登录成功";
+			closeadmin();
+			alert("登录成功");
+			lognname.innerHTML=uname;
 			connection_manager.setDistributionFunction("success", null);
 			connection_manager.setDistributionFunction("notexist", null);
 			connection_manager.setDistributionFunction("fail", null);
 	 	 });
 	 	 connection_manager.setDistributionFunction("notexist", function(msg){
 			console.log(msg.tag);
-			//显示没用户
-			logres();
-		 	var logmssg=document.getElementById("logmsg");
-			logmssg.innerHTML="用户不存在";
-			//
-			//
+			alert("用户不存在");
 			connection_manager.setDistributionFunction("success", null);
 			connection_manager.setDistributionFunction("notexist", null);
 			connection_manager.setDistributionFunction("fail", null);
 	 	 });
 	 	 connection_manager.setDistributionFunction("fail", function(msg){
 			console.log(msg.tag);
-			//显示失败
-			//
-			//
-			//
-			logres();
-		 	var logmssg=document.getElementById("logmsg");
-			logmssg.innerHTML="验证错误";
+			alert("用户名与密码不匹配");
 			connection_manager.setDistributionFunction("success", null);
 			connection_manager.setDistributionFunction("notexist", null);
 			connection_manager.setDistributionFunction("fail", null);
@@ -82,9 +68,6 @@ function checkName(){
 	    return false; 
 	    } 
 	  else{
-		  //ename.innerHTML=uname.value;
-		  //alert("1");
-		  //alert(uname.innerHTML);
 		  ename.style.visibility="hidden";
 		  return true;
 	  }
@@ -123,21 +106,15 @@ function checkForm(){
 		 	connection_manager.setDistributionFunction("success", function(msg){
 				console.log(msg.tag);
 				 //显示成功---------------------------------
-				 //
-				 //
-				logres();
-			 	var logmssg=document.getElementById("logmsg");
-			 	logmssg.innerHTML="注册成功";
+				closesign();
+				alert("注册成功");
 				connection_manager.setDistributionFunction("success", null);
 				connection_manager.setDistributionFunction("fail", null);
 			});
 			connection_manager.setDistributionFunction("fail", function(msg){
 				console.log(msg.tag);
 				//显示失败-----------------------------------
-				//
-				logres();
-				var logmssg=document.getElementById("logmsg");
-				logmssg.innerHTML="注册失败";
+				alert("注册失败");
 			    connection_manager.setDistributionFunction("success", null);
 			    connection_manager.setDistributionFunction("fail", null);
 		   	});
@@ -222,7 +199,7 @@ function viewRecord(){
 	connection_manager.setDistributionFunction("self", function(msg){
 		console.log(msg.tag);
 		console.log(msg.value[0]);
-		alert("当前用户为："+uname);
+		//alert("当前用户为："+uname);
 		if(msg.value.length<1)return;
 		document.getElementById("date1").innerHTML=msg.value[0].date;
 	
@@ -236,42 +213,86 @@ function viewRecord(){
 		}
 		document.getElementById("pe1").innerHTML=msg.value[0].guest+"   VS   "+msg.value[0].host;
 
-		if(msg.value.length<2)return;
-		document.getElementById("date2").innerHTML=msg.value[1].date;
-	
-		if(msg.value[1].win==1)
-		{
-			document.getElementById("res2").innerHTML=msg.value[1].host;
-		}
-		else if(msg.value[1].win==0)
-		{
-			document.getElementById("res2").innerHTML=msg.value[1].guest;
-		}
-		document.getElementById("pe2").innerHTML=msg.value[1].guest+"   VS   "+msg.value[1].host;
-
-
 		connection_manager.setDistributionFunction("ranklist", null);
 	});
 }
 
-function startMatch(){
-	connection_manager.server_socket.send(JSON.stringify({tag:"match"}));
+async function startMatch(){
+	if(game.whohost=="youhost"||game.whohost=="hehost"||game.whohost=="local"){
+		document.getElementById("game_status").innerHTML = "进行在线游戏之前必须停止正在进行的游戏";
+		return;
+	}
+	else if(game.whohost=="youhoststopped"||game.whohost=="hehoststopped"||game.whohost=="localstopped"){
+		game.endGame();
+	}
+
+	try{
+		await connection_manager.server_socket.send(JSON.stringify({tag:"match"}));
+	}
+	catch(reason){
+		document.getElementById("game_status").innerHTML = "暂未连接上服务器，请等待几秒后重试";
+		return;
+	}
+	document.getElementById("game_status").innerHTML = "匹配中";
 	connection_manager.setDistributionFunction("pairing success", function(msg){
-		connection_manager.startPeerConnection(msg.whohost=="youhost");
-		connection_manager.dataChannel.onopen = function(){
-			game.prepareGame(msg.whohost, connection_manager.dataChannel);
-			console.log("channel open");
-		}
-		connection_manager.dataChannel.onerror = function(e){
-			game.stopGame();
-			console.log("channel error:"+JSON.stringify(e));
-		}
-		connection_manager.dataChannel.onclose = function(){
-			game.stopGame();
-			console.log("channel closed");
-		}
+		connection_manager.setDistributionFunction("pairing success", null);
+		document.getElementById("game_status").innerHTML = "建立连接";
+		tryp2p(msg);
 	});
 }
+function tryp2p(msg){
+	connection_manager.startPeerConnection(msg.whohost=="youhost");
+	connection_manager.dataChannel.onopen = function(){
+		game.prepareGame(msg.whohost, connection_manager.dataChannel);
+		document.getElementById("game_status").innerHTML = "";
+		console.log("channel open");
+	}
+	connection_manager.dataChannel.onerror = function(e){
+		game.stopGame();
+		console.log("channel error:"+JSON.stringify(e));
+	}
+	connection_manager.dataChannel.onclose = function(){
+		game.stopGame();
+		console.log("channel closed");
+	}
+	//retry
+	connection_manager.peerConnection.oniceconnectionstatechange = function(){
+		console.log("peerConnection iceConnectionState "+connection_manager.peerConnection.iceConnectionState);
+		if(connection_manager.peerConnection.iceConnectionState=="failed"){
+			console.log("retrying");
+			document.getElementById("game_status").innerHTML = "正在重试连接";
+			connection_manager.closePeerConnection();
+			tryp2p();
+		}
+	}
+}
+function closeMatch(){
+	connection_manager.setDistributionFunction("pairing success", null);
+	document.getElementById("game_status").innerHTML = "游戏已结束";
+	if(game.whohost==null){
+		return;
+	}
+	game.endGame();
+	if(connection_manager.peerConnection!=null){
+		connection_manager.closePeerConnection();
+	}
+}
+function addgetmsg(){
+	connection_manager.setDistributionFunction("chat", function(msg){
+		document.getElementById("chattext").innerHTML+='<p>'+msg.username+": "+msg.text+'</p>';
+	});
+}
+function sendmsg(){
+	chatmsg=document.getElementById("textsend").value;
+	//alert(sendmsg);
+	document.getElementById("chattext").innerHTML+='<p>'+uname+": "+chatmsg+'</p>';
+	document.getElementById("textsend").value = "";
+	connection_manager.server_socket.send(">"+JSON.stringify({tag:'chat', username:uname, text:chatmsg}));
+}
 function startLocal(){
+	connection_manager.setDistributionFunction("pairing success", null);
+	if(game.whohost=="local"||game.whohost=="localstopped"){
+		game.endGame();
+	}
 	game.prepareGame("local");
 }
