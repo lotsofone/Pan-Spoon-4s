@@ -98,6 +98,8 @@ base_generator.generatePhysics = function(base_objects){
         else{
             option.mass = 1;
         }
+        option.angularDamping = 0;
+        option.damping = 0;
         var body = new p2.Body(option);
 
         var shape;
@@ -228,9 +230,6 @@ base_generator.destoryPhysics = function(base_objects){
         base_objects[i].vehicle = null;
     }
     base_generator.world = null;
-    base_generator.damageSuma1.innerHTML = "";
-    base_generator.damageSuma2.innerHTML = "";
-    base_generator.ballhpa.innerHTML = "";
 }
 base_generator.carObject = function(tag){
     /*
